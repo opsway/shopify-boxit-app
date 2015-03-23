@@ -1,0 +1,6 @@
+RewriteEngine On
+RewriteRule ^$ /frontend/web [L]
+RewriteRule ^admin$ /backend/web [L]
+RewriteRule ^frontend/web/(.*?)/$ /frontend/web/index.php?r=$1 [NC,L]
+Header add Access-Control-Allow-Origin "*"
+Header add Access-Control-Allow-Methods: "GET,POST,OPTIONS,DELETE,PUT"
