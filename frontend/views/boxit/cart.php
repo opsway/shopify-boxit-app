@@ -3,12 +3,21 @@
   body { margin: 20px; direction: ltr; }
   a { cursor: pointer; margin-left: 26px; color: #999; font-size: 12px; }
   a:hover { text-decoration: underline; color: #333; }
+  .method {
+	display: inline;
+	height: 70px;
+	float: left;
+	margin-left: 14px;
+  }
   .method span {
     margin: 15px;
     font-weight: bold; font-size: 12px;
     color: #0993a8;
   }
-  .method { height: 70px; }
+  .inputField{
+	display: inline;
+	margin-left: 14px;	
+  }
 </style>
 <div>
   <h1>Delivery options:</h1>
@@ -31,8 +40,17 @@
     Shop&amp;Collect delivery
   </label>
 </div>
-<div>
-  <input id='pickup_location_id' readonly='readonly' placeholder='code'>
+<div class='clearfix'></div>
+<div class='inputField'>
+  <input id='pickup_location_id' readonly='readonly' placeholder='Locker ID'>
+  </input>
+</div>
+<div class='inputField'>
+  <input id='pickup_email' placeholder='Enter Email'>
+  </input>
+</div>
+<div class='inputField'>
+  <input id='pickup_mobile' placeholder='Enter Phone number'>
   </input>
 </div>
 <script type='text/javascript' src='//service.box-it.co.il/plugin/Shopify/demo'></script>

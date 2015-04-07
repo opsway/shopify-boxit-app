@@ -100,6 +100,20 @@ class SiteController extends Controller
 			]
 		]);
 		
+		$shopify('PUT','/admin/themes/' . $result[0]['id'] . '/assets.json',[
+			'asset'	=>	[
+				'key'	=>	'assets/jquery.js',
+				'attachment'	=>	base64_encode(\Yii::$app->view->renderFile('@app/views/boxit/jquery.js'))
+			]
+		]);
+		
+		$shopify('PUT','/admin/themes/' . $result[0]['id'] . '/assets.json',[
+			'asset'	=>	[
+				'key'	=>	'assets/common.js',
+				'attachment'	=>	base64_encode(\Yii::$app->view->renderFile('@app/views/boxit/common.js'))
+			]
+		]);
+		
 		//$assets = $shopify('GET','/admin/themes/' . $result[0]['id'] . '/assets.json');
 		
 		$content = \Yii::$app->view->renderFile('@app/views/boxit/cart.php',['test' => 'test']);
