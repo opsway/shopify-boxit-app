@@ -54,7 +54,7 @@ class SiteController extends Controller
                             $shop, $access_token, $settings['api_key'], $settings['shared_secret']
             );
 
-            /*$hooks = array(
+            $hooks = array(
                     'app/uninstalled'
             );
 
@@ -69,7 +69,7 @@ class SiteController extends Controller
                     );
                     $shopify('POST', '/admin/webhooks.json', $arguments);
             }
-			*/
+			
             $arguments = array(
                     'carrier_service'	=>	array(
                             'name' => 'Boxit',
@@ -81,7 +81,7 @@ class SiteController extends Controller
 
             $shopify('POST', '/admin/carrier_services.json', $arguments);
 
-            /*$result = $shopify('GET','/admin/themes.json',['role' => 'main']);
+            $result = $shopify('GET','/admin/themes.json',['role' => 'main']);
 
             $asset = $shopify('GET', '/admin/themes/' . $result[0]['id'] . '/assets.json', ['asset[key]' => 'templates/cart.liquid','theme_id' => $result[0]['id']]);
 
@@ -133,7 +133,7 @@ class SiteController extends Controller
             $userSettings->access_token = $access_token;
             $userSettings->store_name = $shop;
             $userSettings->old_cart = $asset['value'];
-            $userSettings->save();*/
+            $userSettings->save();
 
             //Yii::$app->db->createCommand('INSERT INTO user_settings(`access_token`,`store_name`,`old_cart`) VALUES("' . $access_token . '", "' . $shop . '","' . \Yii::$app->db->quoteValue() . '")')->execute();
 

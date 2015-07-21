@@ -85,7 +85,7 @@ class AppController extends Controller
         
 	public function actionUninstalled()
 	{
-        /*Yii::info('$result', 'info');
+        Yii::info('$result', 'info');
 		$appSettings = Yii::$app->db->createCommand('SELECT * FROM app_settings')->queryOne();
 		$userSettings = Usersettings::getByParams(['store_name' => $_SERVER['HTTP_X_SHOPIFY_SHOP_DOMAIN']]);
 		
@@ -124,7 +124,7 @@ class AppController extends Controller
                 
 		if(is_null($userSettings))
 			return false;
-		$userSettings->delete();*/
+		$userSettings->delete();
 	}
 
 }
