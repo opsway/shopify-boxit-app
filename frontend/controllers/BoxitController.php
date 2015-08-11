@@ -4,6 +4,7 @@ namespace frontend\controllers;
 use Yii;
 use yii\web\Controller;
 use sandeepshetty\shopify_api;
+use phpish\shopify;
 use common\models\Usersettings;
 use common\models\Appsettings;
 
@@ -35,7 +36,7 @@ class BoxitController extends Controller
 	
 	public function actionIndex()
 	{
-		$rates = array( 'rates' => 
+		$rates = array( 'rates' =>
 			array(
 				'service_name'		=>	'Boxit',
 				'service_code'		=>	'BXT',
@@ -61,11 +62,11 @@ class BoxitController extends Controller
 		$userSettings = Usersettings::getByParams(['store_name' => $_SERVER['HTTP_X_SHOPIFY_SHOP_DOMAIN']]);
 		
 		var_dump($userSettings['access_token']);die;
-		$shopify = shopify_api\client(
-				$_SERVER['HTTP_X_SHOPIFY_SHOP_DOMAIN'], $userSettings['access_token'], $appSettings['api_key'], $appSettings['shared_secret']
+		$shopify = shopify\client(
+				$_SERVER['HTTP_X_SHOPIFY_SHOP_DOMAIN'], $appSettings['api_key'], $userSettings['access_token']
 		);		
 		
-		$result = $shopify('GET','/admin/themes.json',['role' => 'main']);
+		$result = $shopify('GET /admin/themes.json',['role' => 'main']);
 	}
 	
 	public function actionCallback()
@@ -76,7 +77,7 @@ class BoxitController extends Controller
 	public function actionCarrier()
 	{
 		/*$rates = array();
-		$rates[] = array( 'rates' => 
+		$rates[] = array( 'rates' =>
 			array(
 				'service_name'		=>	'Boxit',
 				'service_code'		=>	'BXT',
@@ -94,7 +95,7 @@ class BoxitController extends Controller
 				'max_delivery_date'	=>	'2013-04-12 14:48:45 -0400'
 			)
 		);
-		
+
 		echo json_encode($rates);*/
 		/*echo '{
            "rates": [
