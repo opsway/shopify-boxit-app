@@ -71,9 +71,12 @@ class SiteController extends Controller
                 var_dump($e); die();
             }
 
-
             $hooks = array(
-                'app/uninstalled'
+                'app/uninstalled',
+                'orders/create',
+                'orders/updated',
+                'fulfillments/create',
+                'fulfillments/update',
             );
 
             foreach($hooks as $hook)
@@ -276,6 +279,43 @@ class SiteController extends Controller
             echo \Yii::$app->view->renderFile('@app/views/shopify_frontend/settings.php',['test' => 'test']);
         }*/
     }
+
+    /*public function actionReadorder(){
+
+        $command = Yii::$app->db->createCommand('SELECT * FROM app_settings');
+        $settings = $command->queryOne();
+
+        $request = Yii::$app->request;
+
+        $user_settings = Usersettings::getByParams(['store_name' => $request->get('shop')]);
+
+        try {
+            $shopify = shopify\client(
+                $request->get('shop'), $settings['api_key'], $user_settings['access_token']
+            );
+        } catch (\Exception $e){
+            var_dump($e); die();
+        }
+
+        try {
+
+            $order = $shopify('GET /admin/orders/1127053829.json');
+
+            echo "<pre>", var_dump($order); die();
+
+        } catch (\yii\base\UserException $e){
+
+            // rethrow excpetion
+            throw new \yii\base\UserException($e->getMessage());
+
+        } catch (\Exception $e){
+
+            \Yii::error('New exception for user '.$request->get('shop').' with access_token '.$user_settings['access_token'].': '.$e->getMessage(), 'ShopifyApp/GetOrder');
+            throw new \Exception($e->getMessage(), $e->getCode(), $e);
+        }
+
+
+    }*/
 
     /**
      * backend action to save config settings

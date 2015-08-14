@@ -24,8 +24,8 @@ class m150305_154036_init extends Migration
 
         $this->insert('app_settings',array(
             'api_key'   => '703f67cde06b037199b92e1a49a0fd28',
-            'redirect_url'  =>  'https://shopify-boxit-app.dev/site/index.php?r=site/callback',
-            'permissions'   =>  '["read_content","write_content","read_products","write_products","read_customers","write_customers","read_orders","read_shipping","write_shipping","write_orders"]',
+            'redirect_url'  =>  'https://shopify-boxit-app.dev/index.php?r=site/callback',
+            'permissions'   =>  '["read_themes","write_themes","read_shipping","write_shipping","read_script_tags","write_script_tags", "read_orders", "write_orders", "read_fulfillments", "write_fulfillments"]',
             'shared_secret' =>  'e02fa16a4d14c9166549101eadf6e47a'
         ));
 

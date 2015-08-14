@@ -43,7 +43,8 @@
 </style>
 
 <div class="b-boxit-container">
-
+    <input type="hidden" id="customer_id" value="{% if customer %}{{ customer.id }}{% endif %}" />
+    <input type="hidden" id="shop" value="{{ shop.url }}" />
     <h3 class="title">Delivery options:</h3>
 
     <div class='method'>
@@ -67,16 +68,20 @@
         </label>
     </div>
     <div class='clearfix'></div>
-    <div class='inputField'>
-        <input id='pickup_location_id' readonly='readonly' placeholder='Locker ID'>
-    </div>
-    <div class='inputField'>
-        <input id='pickup_email' placeholder='Enter Email'>
-    </div>
-    <div class='inputField'>
-        <input id='pickup_mobile' placeholder='Enter Phone number'>
-    </div>
+    <input id='pickup_location_id' readonly='readonly' type="hidden" />
+    <div class='inputField' style="display:none;">
+        <select id="mobile_prefix" style="height: 29px;">
+            <option value="050">050</option>
+            <option value="052">052</option>
+            <option value="053">053</option>
+            <option value="054">054</option>
+            <option value="055">055</option>
+            <option value="057">057</option>
+            <option value="050">058</option>
+        </select>
+        - <input class='pickup_mobile' type="text" placeholder='Enter Phone number'  style="height: 29px;" /><br>
+    <div id="phone-message" style="margin-left: 86px;font-size: 11px;color: red;">(Please enter 7-digit number)</div>
 </div>
-<script type="text/javascript" src="{{ 'boxitapp.jquery.js' | asset_url }}"></script>
+<!-- <script type="text/javascript" src="{{ 'boxitapp.jquery.js' | asset_url }}"></script> -->
 <script type="text/javascript" src="{{ 'boxitapp.bootstrap.js' | asset_url }}"></script>
 <script type='text/javascript' src='//service.box-it.co.il/plugin/Shopify/demo'></script>

@@ -129,4 +129,3 @@ class BoxitController extends Controller
 	}
 
 }
-?>

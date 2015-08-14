@@ -37,5 +37,8 @@ return [
             // for the mailer to send real emails.
             'useFileTransport' => true,
         ],
+        'BoxItApi' => [
+            'class' => 'common\components\BoxItApi',
+        ]
     ],
 ];

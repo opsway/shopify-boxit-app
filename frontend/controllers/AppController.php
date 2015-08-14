@@ -7,33 +7,13 @@ use sandeepshetty\shopify_api;
 use phpish\shopify;
 use common\models\Usersettings;
 use common\models\Usercart;
-use common\models\Appsettings;
 
 /**
  * Site controller
  */
-class AppController extends Controller
+class AppController extends ShopifyController
 {
 
-    public $enableCsrfValidation = false;
-
-    public function behaviors()
-    {
-        return [
-        ];
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function actions()
-    {
-        return [
-            'error' => [
-                'class' => 'yii\web\ErrorAction',
-            ],
-        ];
-    }
 
     public function actionIndex()
     {
@@ -54,149 +34,278 @@ class AppController extends Controller
         }
     }
 
+    /**
+     * method generates session id
+     * @return string
+     */
+    protected function _generateSessionId(){
+
+        Yii::$app->session->open();
+        $session = Yii::$app->session->getId();
+        Yii::$app->session->close();
+
+        return $session;
+
+    }
+
     public function actionSave()
     {
-        $shop = str_replace('http://','',$_POST['shop']);
-        $shop = str_replace('https://','',$shop);
-        $cart = Usercart::getByParams(['shop' => $shop]);
-        if(is_null($cart))
+        $request = Yii::$app->request;
+
+        $shop = preg_replace('#^https?://(.*)$#', '$1', $request->post('shop'));
+
+        $session = $request->post('session');
+        $session_created = false;
+
+        if (!$session){
+
+            $session = $this->_generateSessionId();
+            $session_created = true;
+        }
+
+        $cart = Usercart::getByParams(['store_name' => $shop, 'session' => $session, 'is_complete' => 0]);
+
+        if (is_null($cart)){
             $cart = new Usercart();
-        $cart->locker_id = $_POST['locker_id'];
-        $cart->shop = $shop;
-        $cart->phone = $_POST['phone'];
-        $cart->type = $_POST['type'];
-        $cart->address = $_POST['address'];
+            $cart->session = $session;
+            $cart->store_name = $shop;
+        }
+
+        $cart->locker_id = $request->post('locker_id');
+        $cart->phone = $request->post('phone');
+        $cart->type = $request->post('type');
+        $cart->address = $request->post('address');
         $cart->save();
+
+        echo json_encode($session_created ? array('session' => $session) : array());
     }
 
     public function actionCart()
     {
-        $shop = str_replace('http://','',$_GET['shop']);
-        $shop = str_replace('https://','',$shop);
-        $cart = Usercart::getByParams(['shop' => $shop]);
+        $request = Yii::$app->request;
+
+        $shop = preg_replace('#^https?://(.*)$#', '$1', $request->get('shop'));
+
+        $session = $request->post('session');
+        $session_created = false;
+
+        if (!$session){
+
+            $session = $this->_generateSessionId();
+            $session_created = true;
+        }
+
+        $cart = Usercart::getByParams(['store_name' => $shop, 'session' => $session, 'is_complete' => 0]);
         $data = array(
             'locker_id' => $cart->locker_id,
-            'email' => $cart->email,
+            //'email' => $cart->email,
             'phone' => $cart->phone,
             'type' => $cart->type,
         );
+
+        if ($session_created){
+            $data['session'] = $session;
+        }
 
         echo json_encode($data);
     }
 
     /**
+     * method uninstall app
      * @return bool
-     * TODO: refactor
+     * @throws \yii\base\UserException
+     * @throws \Exception
      */
     public function actionUninstalled()
     {
-        Yii::info('$result', 'info');
-        $appSettings = Yii::$app->db->createCommand('SELECT * FROM app_settings')->queryOne();
-        $userSettings = Usersettings::getByParams(['store_name' => $_SERVER['HTTP_X_SHOPIFY_SHOP_DOMAIN']]);
 
-        if (!empty($userSettings)){
+        $request = Yii::$app->request;
 
-            $shopify = shopify\client(
-                $_SERVER['HTTP_X_SHOPIFY_SHOP_DOMAIN'], $appSettings['api_key'], $userSettings['access_token']
-            );
+        // check request from shopify server
+        $data = file_get_contents('php://input');
+        $verified = $this->_verifyWebhook($data, $request->getHeaders()->get('x-shopify-hmac-sha256')/*$_SERVER['HTTP_X_SHOPIFY_HMAC_SHA256']*/);
 
-            try {
+        \Yii::error('Uninstalling app from '.$request->getHeaders()->get('x-shopify-shop-domain').' ...');
 
-                $result = $shopify('GET /admin/themes.json',['role' => 'main']);
+        if ($verified){
 
-                if (!$result || empty($result)){
+            $appSettings = Yii::$app->db->createCommand('SELECT * FROM app_settings')->queryOne();
+            $userSettings = Usersettings::getByParams(['store_name' => $request->getHeaders()->get('x-shopify-shop-domain')]);
 
-                    // loggin bad themes list
-                    \Yii::error('Bad themes list for user '.$_SERVER['HTTP_X_SHOPIFY_SHOP_DOMAIN'].' with access_token '.$userSettings['access_token'], 'ShopifyApp/UnInstalling');
-                    \Yii::error($result, 'ShopifyApp/UnInstalling');
+            if (!empty($userSettings)){
 
-                    throw new \yii\base\UserException('Bad themes list on uninstalling App');
+                $shopify = shopify\client(
+                    $request->getHeaders()->get('x-shopify-shop-domain'), $appSettings['api_key'], $userSettings['access_token']
+                );
+
+                $result = null;
+
+                try {
+
+                    $result = $shopify('GET /admin/themes.json',['role' => 'main']);
+
+                    if (!$result || empty($result)){
+
+                        // loggin bad themes list
+                        \Yii::error('Bad themes list for user '.$request->getHeaders()->get('x-shopify-shop-domain').' with access_token '.$userSettings['access_token'], 'ShopifyApp/UnInstalling');
+                        \Yii::error($result, 'ShopifyApp/UnInstalling');
+
+                        throw new \yii\base\UserException('Bad themes list on uninstalling App');
+
+                    }
+
+                } catch (\yii\base\UserException $e){
+
+                    // rethrow excpetion
+                    throw new \yii\base\UserException($e->getMessage());
+
+                } catch (\Exception $e){
+
+                    \Yii::error('New exception for user '.$request->getHeaders()->get('x-shopify-shop-domain').' with access_token '.$userSettings['access_token'].': '.$e->getMessage(), 'ShopifyApp/UnInstalling');
+                    //throw new \Exception($e->getMessage(), $e->getCode(), $e);
+                }
+                Yii::info($result, 'info');
+
+                /*$cartHtml = str_replace('"','\'',$userSettings['old_cart']);
+                $cartHtml = str_replace("\n","\\n",$cartHtml);
+                $cartHtml = str_replace("\t","\\t",$cartHtml);
+                $cartHtml = str_replace("\r","\\r",$cartHtml);*/
+
+                /*
+                 * get concrete cart template
+                 */
+                try {
+
+                    $asset = $shopify('GET /admin/themes/' . $result[0]['id'] . '/assets.json', ['asset[key]' => 'templates/cart.liquid','theme_id' => $result[0]['id']]);
+
+                    if (!$asset || empty($asset)){
+
+                        // loggin bad cart template
+                        \Yii::error('Cannot find cart template on user '.$request->getHeaders()->get('x-shopify-shop-domain').' with access_token '.$userSettings['access_token'], 'ShopifyApp/UnInstalling');
+                        \Yii::error($asset, 'ShopifyApp/Installing');
+
+                        throw new \yii\base\UserException('Cannot find cart template to apply App changes');
+
+                    }
+
+                } catch (\yii\base\UserException $e){
+
+                    // rethrow excpetion
+                    throw new \yii\base\UserException($e->getMessage());
+
+                } catch (\Exception $e){
+
+                    \Yii::error('New exception for user '.$request->getHeaders()->get('x-shopify-shop-domain').' with access_token '.$userSettings['access_token'].': '.$e->getMessage(), 'ShopifyApp/UnInstalling');
+                    //throw new \Exception($e->getMessage(), $e->getCode(), $e);
+                }
+
+
+                // if we have access to assets
+                if (isset($asset) && $asset['value'])
+                    $asset['value'] = preg_replace('#<!-- BOXIT-APP -->.*?<!-- END BOXIT-APP -->#is', '', $asset['value']);
+
+                // if we have access to themes
+                if ($result){
+
+                    try {
+
+
+                        $shopify('PUT /admin/themes/' . $result[0]['id'] . '/assets.json', array(), [
+                            'asset'	=>	[
+                                'key'	=>	'templates/cart.liquid',
+                                'value'	=>	$asset['value']
+                            ]
+                        ]);
+
+                        $shopify('DELETE /admin/themes/' . $result[0]['id'] . '/assets.json', array(), [
+                            'asset'	=>	[
+                                'key'	=>	'snippets/boxitapp.liquid'
+                            ]
+                        ]);
+
+                        $shopify('DELETE /admin/themes/' . $result[0]['id'] . '/assets.json', array(), [
+                            'asset'	=>	[
+                                'key'	=>	'assets/boxitapp.jquery.js'
+                            ]
+                        ]);
+
+                        $shopify('DELETE /admin/themes/' . $result[0]['id'] . '/assets.json', array(), [
+                            'asset'	=>	[
+                                'key'	=>	'assets/boxitapp.bootstrap.js'
+                            ]
+                        ]);
+
+                    } catch (\yii\base\UserException $e){
+
+                        // rethrow excpetion
+                        throw new \yii\base\UserException($e->getMessage());
+
+                    } catch (\Exception $e){
+
+                        \Yii::error('New exception for user '.$request->getHeaders()->get('x-shopify-shop-domain').' with access_token '.$userSettings['access_token'].': '.$e->getMessage(), 'ShopifyApp/UnInstalling');
+                        //throw new \Exception($e->getMessage(), $e->getCode(), $e);
+                    }
 
                 }
 
-            } catch (\yii\base\UserException $e){
+                // try to get webhooks
+                try{
 
-                // rethrow excpetion
-                throw new \yii\base\UserException($e->getMessage());
+                    $hooks = $shopify('GET /admin/webhooks.json');
 
-            } catch (\Exception $e){
+                } catch (\yii\base\UserException $e){
 
-                \Yii::error('New exception for user '.$_SERVER['HTTP_X_SHOPIFY_SHOP_DOMAIN'].' with access_token '.$userSettings['access_token'].': '.$e->getMessage(), 'ShopifyApp/UnInstalling');
-                throw new \Exception($e->getMessage(), $e->getCode(), $e);
-            }
-            Yii::info($result, 'info');
+                    // rethrow excpetion
+                    throw new \yii\base\UserException($e->getMessage());
 
-            /*$cartHtml = str_replace('"','\'',$userSettings['old_cart']);
-            $cartHtml = str_replace("\n","\\n",$cartHtml);
-            $cartHtml = str_replace("\t","\\t",$cartHtml);
-            $cartHtml = str_replace("\r","\\r",$cartHtml);*/
+                } catch (\Exception $e){
 
-            /*
-             * get concrete cart template
-             */
-            try {
+                    \Yii::error('New exception for user '.$request->getHeaders()->get('x-shopify-shop-domain').' with access_token '.$userSettings['access_token'].': '.$e->getMessage(), 'ShopifyApp/UnInstalling');
+                    //throw new \Exception($e->getMessage(), $e->getCode(), $e);
+                }
 
-                $asset = $shopify('GET /admin/themes/' . $result[0]['id'] . '/assets.json', ['asset[key]' => 'templates/cart.liquid','theme_id' => $result[0]['id']]);
 
-                if (!$asset || empty($asset)){
+                if (isset($hooks) && $hooks){
+                    foreach($hooks as $hook)
+                    {
+                        \Yii::error($hook);
+                        if ($hook['topic'] == 'orders/create' ||
+                            $hook['topic'] == 'orders/updated' ||
+                            $hook['topic'] == 'fulfillments/create' ||
+                            $hook['topic'] == 'fulfillments/update' ||
+                            $hook['topic'] == 'app/uninstalled'
+                        ){
+                            try {
 
-                    // loggin bad cart template
-                    \Yii::error('Cannot find cart template on user '.$_SERVER['HTTP_X_SHOPIFY_SHOP_DOMAIN'].' with access_token '.$userSettings['access_token'], 'ShopifyApp/UnInstalling');
-                    \Yii::error($asset, 'ShopifyApp/Installing');
+                                $shopify('DELETE /admin/webhooks/' . $hook['id'] . '.json');
 
-                    throw new \yii\base\UserException('Cannot find cart template to apply App changes');
+                            } catch (\yii\base\UserException $e){
+
+                                // rethrow excpetion
+                                throw new \yii\base\UserException($e->getMessage());
+
+                            } catch (\Exception $e){
+
+                                \Yii::error('New exception for user '.$request->getHeaders()->get('x-shopify-shop-domain').' with access_token '.$userSettings['access_token'].': '.$e->getMessage(), 'ShopifyApp/UnInstalling');
+                                //throw new \Exception($e->getMessage(), $e->getCode(), $e);
+                            }
+                        }
+
+                    }
 
                 }
 
-            } catch (\yii\base\UserException $e){
+                if(is_null($userSettings))
+                    return false;
 
-                // rethrow excpetion
-                throw new \yii\base\UserException($e->getMessage());
+                $userSettings->delete();
 
-            } catch (\Exception $e){
-
-                \Yii::error('New exception for user '.$_SERVER['HTTP_X_SHOPIFY_SHOP_DOMAIN'].' with access_token '.$userSettings['access_token'].': '.$e->getMessage(), 'ShopifyApp/UnInstalling');
-                throw new \Exception($e->getMessage(), $e->getCode(), $e);
+                \Yii::error('Uninstalled successfull '.$request->getHeaders()->get('x-shopify-shop-domain').'!');
             }
-
-            $asset['value'] = preg_replace('#<!-- BOXIT-APP -->.*?<!-- END BOXIT-APP -->#is', '', $asset['value']);
-
-            $shopify('PUT /admin/themes/' . $result[0]['id'] . '/assets.json', array(), [
-                'asset'	=>	[
-                    'key'	=>	'templates/cart.liquid',
-                    'value'	=>	$asset['value']
-                ]
-            ]);
-
-            $shopify('DELETE /admin/themes/' . $result[0]['id'] . '/assets.json', array(), [
-                'asset'	=>	[
-                    'key'	=>	'snippets/boxitapp.liquid'
-                ]
-            ]);
-
-            $shopify('DELETE /admin/themes/' . $result[0]['id'] . '/assets.json', array(), [
-                'asset'	=>	[
-                    'key'	=>	'assets/boxitapp.jquery.js'
-                ]
-            ]);
-
-            $shopify('DELETE /admin/themes/' . $result[0]['id'] . '/assets.json', array(), [
-                'asset'	=>	[
-                    'key'	=>	'assets/boxitapp.bootstrap.js'
-                ]
-            ]);
-
-            $hooks = $shopify('GET /admin/webhooks.json');
-            foreach($hooks as $hook)
-            {
-                if($hook['topic'] == 'app/uninstalled')
-                    $shopify('DELETE /admin/webhooks/' . $hook['id'] . '.json');
-            }
-
-            if(is_null($userSettings))
-                return false;
-            $userSettings->delete();
         }
+
+        $this->_responseOk();
     }
+
 
 }
