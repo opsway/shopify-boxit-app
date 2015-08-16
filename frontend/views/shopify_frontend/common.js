@@ -27,8 +27,7 @@ jQuery(function(){
 
         jQuery.ajax({
             'type' : 'POST',
-            //'url'  : 'https://apps.opsway.com/shopify/boxit/frontend/web/index.php?r=app/save',
-            'url'  : 'https://boxit-webt.pagekite.me/site/index.php?r=app/save',
+            'url'  : 'https://'+window.OwsBootstrap.getExternalAppDomain()+'/index.php?r=app/save',
             'dataType' : 'json',
             'crossDomain' : true,
             'data' : {
@@ -121,8 +120,7 @@ jQuery(function(){
 
     jQuery.ajax({
         'type' : 'POST',
-        //'url'	:	'https://apps.opsway.com/shopify/boxit/frontend/web/index.php?r=app/cart&shop=' + jQuery('#shop').val(),
-        'url'  : 'https://boxit-webt.pagekite.me/site/index.php?r=app/cart&shop=' + jQuery('#shop').val(),
+        'url'  : 'https://'+window.OwsBootstrap.getExternalAppDomain()+'/index.php?r=app/cart&shop=' + jQuery('#shop').val(),
         'dataType' : 'json',
         'crossDomain' : true,
         'data' : {
