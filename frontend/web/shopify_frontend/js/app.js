@@ -160,7 +160,7 @@
         var updateOrder = function(){
             jQuery.ajax({
                 'type' : 'POST',
-                'url'  : 'https://'+window.OwsBootstrap.getExternalAppDomain()+'/site/index.php?r=app/updateorder',
+                'url'  : 'https://'+window.OwsBootstrap.getExternalAppDomain()+'/index.php?r=app/updateorder',
                 'dataType' : 'json',
                 'crossDomain' : true,
                 'data' : {
