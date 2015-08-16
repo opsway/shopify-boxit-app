@@ -17,6 +17,8 @@ namespace frontend\controllers;
 use common\models\Usercart;
 use common\models\Usersettings;
 use Yii;
+use yii\filters\AccessControl;
+use yii\filters\VerbFilter;
 
 class OrdersController extends ShopifyController{
 
@@ -30,6 +32,35 @@ class OrdersController extends ShopifyController{
         'shopandcollect' => 'shop_collect',
     );
 
+    public $enableCsrfValidation = false;
+
+    public function behaviors()
+    {
+        \Yii::error('order behaviors');
+
+        return [
+            'access' => [
+                'class' => AccessControl::className(),
+                'only' => ['updated', 'create'],
+                'rules' => [
+                    [
+                        'actions' => ['updated', 'create'],
+                        'allow' => true,
+                        'roles' => ['?'],
+                    ],
+                ],
+            ],
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'updated' => ['post'],
+                    'create' => ['post'],
+                ],
+            ],
+        ];
+    }
+
+
     public function actionUpdated(){
 
         $this->actionCreate();
@@ -38,12 +69,28 @@ class OrdersController extends ShopifyController{
 
     public function actionCreate(){
 
-        $request = Yii::$app->request;
+        return true;
+
+        \Yii::error('start order create');
 
         // check request from shopify server
         $data = file_get_contents('php://input');
+
+        \Yii::error($data);
+
+        $request = Yii::$app->request;
+
+        \Yii::error($request->getRawBody());
+        \Yii::error($_POST);
+
+        /**
+         * @var $ShopifyAPI \common\components\ShopifyAPI
+         */
+        $ShopifyAPI = \Yii::$app->get('ShopifyAPI');
+        $ShopifyAPI->handleRequest();
+
         //Yii::error($data);
-        $verified = $this->_verifyWebhook($data, $request->getHeaders()->get('x-shopify-hmac-sha256')/*$_SERVER['HTTP_X_SHOPIFY_HMAC_SHA256']*/);
+        $verified = $this->_verifyWebhook($data, $ShopifyAPI->getRequestVerifyCode());
 
         if ($verified){
 
@@ -82,16 +129,15 @@ class OrdersController extends ShopifyController{
                 }
             }
 
-
             if (!empty($phones) && !empty($shippings)){
 
-                $userSettings = Usersettings::getByParams(['store_name' => $request->getHeaders()->get('x-shopify-shop-domain')/*$_SERVER['HTTP_X_SHOPIFY_SHOP_DOMAIN']*/]);
+                $userSettings = Usersettings::getByParams(['store_name' => $ShopifyAPI->getRequestShop()]);
 
                 if ($userSettings){
 
                     // try to find user with this phone in not complete user carts
                     $query = Usercart::find()
-                        ->where(['store_name' => $request->getHeaders()->get('x-shopify-shop-domain'), 'is_complete' => 0]);
+                        ->where(['store_name' => $ShopifyAPI->getRequestShop(), 'is_complete' => 0]);
 
                     $_operand = ['or'];
                     foreach ($shippings as $shipping){
@@ -116,7 +162,7 @@ class OrdersController extends ShopifyController{
                     if ($result){
 
                         $result->date_order = date('Y-m-d H:i:s');
-                        $result->order_id = $request->getHeaders()->get('x-shopify-order-id');
+                        $result->order_id = $ShopifyAPI->getRequestOrderId();
                         $result->is_complete = 1;
                         $result->save();
 
@@ -131,7 +177,7 @@ class OrdersController extends ShopifyController{
             Yii::error('Webhook NOT verified. IP: '.$request->getUserIP());
         }
 
-        $this->_responseOk();
+        //$this->_responseOk();
     }
 
 } 

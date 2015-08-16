@@ -32,9 +32,16 @@ class FulfillmentController extends ShopifyController
 
         $request = Yii::$app->request;
 
+        /**
+         * @var $ShopifyAPI \common\components\ShopifyAPI
+         */
+        $ShopifyAPI = \Yii::$app->get('ShopifyAPI');
+        $ShopifyAPI->handleRequest();
+
+
         // check request from shopify server
         $data = file_get_contents('php://input');
-        $verified = $this->_verifyWebhook($data, $request->getHeaders()->get('x-shopify-hmac-sha256')/*$_SERVER['HTTP_X_SHOPIFY_HMAC_SHA256']*/);
+        $verified = $this->_verifyWebhook($data, $ShopifyAPI->getRequestVerifyCode());
 
         if ($verified){
 
@@ -45,14 +52,14 @@ class FulfillmentController extends ShopifyController
             //if (isset($data['tracking_number']) && $data['tracking_number']){
             if (isset($data['order_id']) && $data['order_id']){
 
-                $userSettings = Usersettings::getByParams(['store_name' => $request->getHeaders()->get('x-shopify-shop-domain')/*$_SERVER['HTTP_X_SHOPIFY_SHOP_DOMAIN']*/]);
+                $userSettings = Usersettings::getByParams(['store_name' => $ShopifyAPI->getRequestShop()]);
 
                 if ($userSettings ){
 
                     // try to find user with this phone in not complete user carts
                     $result = Usercart::find()
                         ->where([
-                            'store_name' => $request->getHeaders()->get('x-shopify-shop-domain'),
+                            'store_name' => $ShopifyAPI->getRequestShop(),
                             'order_id' => $data['order_id'],
                             'is_fulfilled' => 0
                             ]
@@ -68,7 +75,7 @@ class FulfillmentController extends ShopifyController
                         $service = $result->type == 'boxit' ? 'BoxIt' : 'Shop&Collect';
 
                         // send API call to the BoxIt
-                        $BoxItApi = \Yii::$app->get('BoxItApi');
+                        $BoxItApi = \Yii::$app->get('BoxItAPI');
                         if ($BoxItApi->postConsumerDelivery(array(
                             'OrderNum' => $result->order_id,
                             'LockerId' => $result->locker_id,

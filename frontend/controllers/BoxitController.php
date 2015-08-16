@@ -2,130 +2,77 @@
 namespace frontend\controllers;
 
 use Yii;
-use yii\web\Controller;
-use sandeepshetty\shopify_api;
 use phpish\shopify;
 use common\models\Usersettings;
-use common\models\Appsettings;
 
 /**
- * Site controller
+ * Boxit carriers controller
  */
-class BoxitController extends Controller
+class BoxitController extends ShopifyController
 {
 
-	public $enableCsrfValidation = false;
-	
-    public function behaviors()
-    {
-        return [
-        ];
-    }
-
     /**
-     * @inheritdoc
+     * action boxit carrier info
      */
-    public function actions()
-    {
-        return [
-			'error' => [
-                'class' => 'yii\web\ErrorAction',
-            ],
-        ];
-    }
-	
-	public function actionIndex()
+    public function actionCarrier()
 	{
-		$rates = array( 'rates' =>
-			array(
-				'service_name'		=>	'Boxit',
-				'service_code'		=>	'BXT',
-				'total_price'		=>	'10',
-				'currency'			=>	'NIS',
-				'min_delivery_date'	=>	'2013-04-12 14:48:45 -0400',
-				'max_delivery_date'	=>	'2013-04-12 14:48:45 -0400'
-			),
-			array(
-				'service_name'		=>	'Foxit',
-				'service_code'		=>	'BXT',
-				'total_price'		=>	'15',
-				'currency'			=>	'NIS',
-				'min_delivery_date'	=>	'2013-04-12 14:48:45 -0400',
-				'max_delivery_date'	=>	'2013-04-12 14:48:45 -0400'
-			)
-		);
+
+        $rates = array('rates' => array());
+
+        /**
+         * @var $ShopifyAPI \common\components\ShopifyAPI
+         */
+        $ShopifyAPI = \Yii::$app->get('ShopifyAPI');
+        $ShopifyAPI->handleRequest();
+
+        // check request from shopify server
+        $data = file_get_contents('php://input');
+        $verified = $this->_verifyWebhook($data, $ShopifyAPI->getRequestVerifyCode());
+
+        if ($verified){
+
+            $userSettings = Usersettings::getByParams(['store_name' => $ShopifyAPI->getRequestShop()]);
+
+            if ($userSettings){
+
+                /**
+                 * @var $ShopifyModule \common\components\ShopifyApp
+                 */
+                $ShopifyModule = \Yii::$app->get('ShopifyApp');
+
+                $settings = $ShopifyModule->getAppSettings();
+
+                // get shop currency
+                $shop_data = $ShopifyAPI->activateClient($ShopifyAPI->getRequestShop(), $settings['api_key'], $userSettings['access_token'])->getShop();
+
+                // detect delivery date
+                $nextday = mktime(0, 0, 0, date('m'), date('d')+1, date('Y'));
+                if (date('w',$nextday) == 0){
+                    $nextday += 24*60*60;
+                } elseif (date('w',$nextday) == 6){
+                    $nextday += 2*24*60*60;
+                }
+
+                foreach (\Yii::$app->params['shopify_app']['carrier_services'] as $app_service_name => $app_service_action ){
+
+                    $rates['rates'][] = array(
+                        'service_name'		=>	$app_service_name,
+                        'service_code'		=>	$app_service_action,
+                        'total_price'		=>	$userSettings[$app_service_action.'_carrier_cost']*100,
+                        'currency'			=>	$shop_data['currency'],
+                        'min_delivery_date'	=>	date('Y-m-d H:i:s O', $nextday),
+                        'max_delivery_date'	=>	date('Y-m-d H:i:s O', $nextday)
+                    );
+
+                }
+
+            }
+        }
 		
 		echo json_encode($rates);
-		die;
-		$_SERVER['HTTP_X_SHOPIFY_SHOP_DOMAIN'] = 'stder.myshopify.com';
-		$appSettings = Yii::$app->db->createCommand('SELECT * FROM app_settings')->queryOne();
-		$userSettings = Usersettings::getByParams(['store_name' => $_SERVER['HTTP_X_SHOPIFY_SHOP_DOMAIN']]);
-		
-		var_dump($userSettings['access_token']);die;
-		$shopify = shopify\client(
-				$_SERVER['HTTP_X_SHOPIFY_SHOP_DOMAIN'], $appSettings['api_key'], $userSettings['access_token']
-		);		
-		
-		$result = $shopify('GET /admin/themes.json',['role' => 'main']);
-	}
-	
-	public function actionCallback()
-	{
-		Yii::info('asd', 'info');
-	}
-	
-	public function actionCarrier()
-	{
-		/*$rates = array();
-		$rates[] = array( 'rates' =>
-			array(
-				'service_name'		=>	'Boxit',
-				'service_code'		=>	'BXT',
-				'total_price'		=>	'10',
-				'currency'			=>	'NIS',
-				'min_delivery_date'	=>	'2013-04-12 14:48:45 -0400',
-				'max_delivery_date'	=>	'2013-04-12 14:48:45 -0400'
-			),
-			array(
-				'service_name'		=>	'Foxit',
-				'service_code'		=>	'BXT',
-				'total_price'		=>	'15',
-				'currency'			=>	'NIS',
-				'min_delivery_date'	=>	'2013-04-12 14:48:45 -0400',
-				'max_delivery_date'	=>	'2013-04-12 14:48:45 -0400'
-			)
-		);
+		exit;
 
-		echo json_encode($rates);*/
-		/*echo '{
-           "rates": [
-               {
-                   "service_name": "canadapost-overnight",
-                   "service_code": "ON",
-                   "total_price": "1295",
-                   "currency": "CAD",
-                   "min_delivery_date": "2013-04-12 14:48:45 -0400",
-                   "max_delivery_date": "2013-04-12 14:48:45 -0400"
-               },
-               {
-                   "service_name": "fedex-2dayground",
-                   "service_code": "1D",
-                   "total_price": "2934",
-                   "currency": "USD",
-                   "min_delivery_date": "2013-04-12 14:48:45 -0400",
-                   "max_delivery_date": "2013-04-12 14:48:45 -0400"
-               },
-               {
-                   "service_name": "fedex-2dayground",
-                   "service_code": "1D",
-                   "total_price": "2934",
-                   "currency": "USD",
-                   "min_delivery_date": "2013-04-12 14:48:45 -0400",
-                   "max_delivery_date": "2013-04-12 14:48:45 -0400"
-               }
-           ]
-        }';*/
-		Yii::info('carrierAPI', 'info');
 	}
+
 
 }

@@ -2,46 +2,22 @@
 namespace frontend\controllers;
 
 use Yii;
-use yii\web\Controller;
-use sandeepshetty\shopify_api;
 use phpish\shopify;
 use common\models\Usersettings;
 
 /**
  * Site controller
  */
-class SiteController extends Controller
+class SiteController extends ShopifyController
 {
-
-    public $enableCsrfValidation = false;
-    /**
-     * @inheritdoc
-     */
-    public function behaviors()
-    {
-        return [
-        ];
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function actions()
-    {
-        return [
-            'error' => [
-                'class' => 'yii\web\ErrorAction',
-            ],
-        ];
-    }
 
     /**
      * Base action for controller
-     * TODO: REFACTOR
      */
     public function actionIndex()
     {
-        \Yii::$app->view->renderFile('@app/views/shopify_frontend/cart.php', ['test' => 'test']);
+        //\Yii::$app->view->renderFile('@app/views/shopify_frontend/cart.php', ['test' => 'test']);
+        throw new \Exception('You are not authorized');
     }
 
     /**
@@ -52,49 +28,35 @@ class SiteController extends Controller
     public function actionCallback()
     {
 
-        $command = Yii::$app->db->createCommand('SELECT * FROM app_settings');
-        $settings = $command->queryOne();
+        /**
+         * @var $shopifyModule \common\components\ShopifyApp
+         */
+        $shopifyModule = \Yii::$app->get('ShopifyApp');
+
+        $settings = $shopifyModule->getAppSettings();
+
         $get = Yii::$app->request->get();
         $shop = isset($get['shop']) ? $get['shop'] : null;
 
+        /**
+         * @var $ShopifyAPI \common\components\ShopifyAPI
+         */
+        $ShopifyAPI = \Yii::$app->get('ShopifyAPI');
+
         if(isset($get['code']))
         {
-            $access_token = shopify\access_token(
-                $shop, $settings['api_key'], $settings['shared_secret'], $get['code']
+            $access_token = $ShopifyAPI->requestAccessToken(
+                $shop,
+                $settings['api_key'],
+                $settings['shared_secret'],
+                $get['code']
             );
 
-            try {
-                $shopify = shopify\client(
-                    $shop, $settings['api_key'], $access_token
-                );
-            } catch (\Exception $e){
-                var_dump($e); die();
-            }
+            $ShopifyAPI->
+                activateClient($shop, $settings['api_key'], $access_token);
 
-            $hooks = array(
-                'app/uninstalled',
-                'orders/create',
-                'orders/updated',
-                'fulfillments/create',
-                'fulfillments/update',
-            );
-
-            foreach($hooks as $hook)
-            {
-                $arguments = array(
-                    'webhook' => array(
-                        'topic' => $hook,
-                        'address' => (\Yii::$app->params['base_api_url'] ? \Yii::$app->params['base_api_url'] : 'https://apps.opsway.com/shopify/boxit/frontend/web').'/index.php?r=' . $hook,
-                        'format' => "json"
-                    )
-                );
-                try {
-                    $shopify('POST /admin/webhooks.json', array(), $arguments);
-                } catch (\Exception $e){
-                    \Yii::error($e->getMessage(), 'ShopifyApp/Installing');
-                }
-
-            }
+            // prepare webhooks
+            $shopifyModule->installWebHooks($ShopifyAPI);
 
             /**
              * uncomment when you will know how much BoxIt get paid for delivery
@@ -110,142 +72,19 @@ class SiteController extends Controller
 
             $shopify('POST /admin/carrier_services.json', array(), $arguments); */
 
-            /**
-             * get only main themes from themes list and patching it
-             */
-            try {
+            // install carrier services
+            $shopifyModule->installCarrierServices($ShopifyAPI);
 
-                $result = $shopify('GET /admin/themes.json',['role' => 'main']);
+            // install templates
+            $old_cart = $shopifyModule->installTemplates($ShopifyAPI);
 
-                if (!$result || empty($result)){
-
-                    // loggin bad themes list
-                    \Yii::error('Bad themes list for user '.$shop.' with access_token '.$access_token, 'ShopifyApp/Installing');
-                    \Yii::error($result, 'ShopifyApp/Installing');
-
-                    throw new \yii\base\UserException('Bad themes list on installing App');
-
-                }
-
-            } catch (\yii\base\UserException $e){
-
-                // rethrow excpetion
-                throw new \yii\base\UserException($e->getMessage());
-
-            } catch (\Exception $e){
-
-                \Yii::error('New exception for user '.$shop.' with access_token '.$access_token.': '.$e->getMessage(), 'ShopifyApp/Installing');
-                throw new \Exception($e->getMessage(), $e->getCode(), $e);
-            }
-
-            /*
-             * get concrete cart template
-             */
-            try {
-
-                $asset = $shopify('GET /admin/themes/' . $result[0]['id'] . '/assets.json', ['asset[key]' => 'templates/cart.liquid','theme_id' => $result[0]['id']]);
-
-                if (!$asset || empty($asset)){
-
-                    // loggin bad cart template
-                    \Yii::error('Cannot find cart template on user '.$shop.' with access_token '.$access_token, 'ShopifyApp/Installing');
-                    \Yii::error($asset, 'ShopifyApp/Installing');
-
-                    throw new \yii\base\UserException('Cannot find cart template to apply App changes');
-
-                }
-
-            } catch (\yii\base\UserException $e){
-
-                // rethrow excpetion
-                throw new \yii\base\UserException($e->getMessage());
-
-            } catch (\Exception $e){
-
-                \Yii::error('New exception for user '.$shop.' with access_token '.$access_token.': '.$e->getMessage(), 'ShopifyApp/Installing');
-                throw new \Exception($e->getMessage(), $e->getCode(), $e);
-            }
-
-            /*
-             * check if we always have installed BoxIT plugin
-             */
-            if (strpos($asset['value'], '<!-- BOXIT-APP -->')){
-
-                \Yii::info('Found old BoxIT cart App template on user '.$shop.' with access_token '.$access_token, 'ShopifyApp/Installing');
-
-                // remove old boxit-app
-                $asset['value'] = preg_replace('#<!-- BOXIT-APP -->.*?<!-- END BOXIT-APP -->#is', '', $asset['value']);
-
-            }
-
-            /*
-             * check if we have necessary code
-             */
-            if (!preg_match('|({%\s+if\s+additional_checkout_buttons\s+%})|sm', $asset['value'], $match)){
-
-                // loggin bad cart template
-                \Yii::error('Users cart template not compatible with App on user '.$shop.' with access_token '.$access_token, 'ShopifyApp/Installing');
-                \Yii::error($asset['value'], 'ShopifyApp/Installing');
-
-                throw new \yii\base\UserException('Unfortunatelly, your cart not compatible with this App');
-
-
-            }
-
-            $content = preg_replace(
-                '|({%\s+if\s+additional_checkout_buttons\s+%})|sm',
-                \Yii::$app->view->renderFile('@app/views/shopify_frontend/include.php') . "\r\t\t" . '$1',
-                $asset['value']);
-
-            //$content = str_replace('"','\'',$content);
-            //$content = str_replace("\n","\\n",$content);
-            //$content = str_replace("\t","\\t",$content);
-            //$content = str_replace("\r","\\r",$content);
-
-
-            $shopify('PUT /admin/themes/' . $result[0]['id'] . '/assets.json', array(), [
-                'asset'	=>	[
-                    'key'	=>	'templates/cart.liquid',
-                    'value'	=>	$content
-                ]
-            ]);
-
-            $shopify('PUT /admin/themes/' . $result[0]['id'] . '/assets.json', array(), [
-                'asset'	=>	[
-                    'key'	=>	'assets/boxitapp.jquery.js',
-                    'attachment'	=>	base64_encode(\Yii::$app->view->renderFile('@app/views/shopify_frontend/jquery.js'))
-                ]
-            ]);
-
-            $shopify('PUT /admin/themes/' . $result[0]['id'] . '/assets.json', array(), [
-                'asset'	=>	[
-                    'key'	=>	'assets/boxitapp.bootstrap.js',
-                    'attachment'	=>	base64_encode(\Yii::$app->view->renderFile('@app/views/shopify_frontend/common.js'))
-                ]
-            ]);
-
-            /*
-             * push main boxit template
-             */
-            $content = \Yii::$app->view->renderFile('@app/views/shopify_frontend/cart.php', ['test' => 'test']);
-            //$content = str_replace("\r","\\r",$content);
-            //$content = str_replace("\n","\\n",$content);
-            //$content = str_replace("\t","\\t",$content);
-            $shopify('PUT /admin/themes/' . $result[0]['id'] . '/assets.json', array(), [
-                'asset'	=>	[
-                    'key'	=>	'snippets/boxitapp.liquid',
-                    'value'	=>	$content
-                ]
-            ]);
 
             $userSettings = new Usersettings();
             $userSettings->access_token = $access_token;
             $userSettings->store_name = $shop;
-            $userSettings->old_cart = $asset['value'];
+            $userSettings->old_cart = $old_cart;
             $userSettings->access_token_hash = md5($access_token . $shop . \Yii::$app->params['store_hash_salt']);
             $userSettings->save();
-
-            //Yii::$app->db->createCommand('INSERT INTO user_settings(`access_token`,`store_name`,`old_cart`) VALUES("' . $access_token . '", "' . $shop . '","' . \Yii::$app->db->quoteValue() . '")')->execute();
 
             $this->redirect('https://' . $shop . '/admin/apps', 302);
 
@@ -256,31 +95,35 @@ class SiteController extends Controller
             // For example when we try to install the app from App store (https://apps.shopify.com/boxit-connector).
             if (empty($userSettings)) {
                 // Get the permission url.
-                $permission_url = shopify\authorization_url($shop, $settings['api_key'], json_decode($settings['permissions'], true));
-
-                $permission_url .= '&redirect_uri=' . rawurlencode((\Yii::$app->params['base_api_url'] ? \Yii::$app->params['base_api_url'] : 'https://apps.opsway.com/shopify/boxit/frontend/web').'/index.php?r=site/callback');
+                $permission_url = $ShopifyAPI->getAuthorizationUrl(
+                    $shop,
+                    $settings['api_key'],
+                    json_decode($settings['permissions'], true),
+                    (\Yii::$app->params['base_api_url'] ? \Yii::$app->params['base_api_url'] : 'https://apps.opsway.com/shopify/boxit/frontend/web').'/index.php?r=site/callback'
+                );
 
                 // Redirect to the permission url.
                 header('Location: ' . $permission_url);
                 exit;
             } else {
+
+                $ShopifyAPI->activateClient($get['shop'], $settings['api_key'], $userSettings['access_token']);
+
                 echo \Yii::$app->view->renderFile('@app/views/shopify_backend/settings.php', [
                     'app_url' => (\Yii::$app->params['base_api_url'] ? \Yii::$app->params['base_api_url'] : 'https://apps.opsway.com/shopify/boxit/frontend/web'),
                     'document_domain' => \Yii::$app->params['document.domain'],
                     'store_settings' => $settings,
-                    'user_settings' => $userSettings
+                    'user_settings' => $userSettings,
+                    'is_templates_installed' => $shopifyModule->isTemplateInstalled($ShopifyAPI),
                 ]);
             }
 
         }
 
 
-        /*} else {
-            echo \Yii::$app->view->renderFile('@app/views/shopify_frontend/settings.php',['test' => 'test']);
-        }*/
     }
 
-    /*public function actionReadorder(){
+    public function actionReadorder(){
 
         $command = Yii::$app->db->createCommand('SELECT * FROM app_settings');
         $settings = $command->queryOne();
@@ -299,7 +142,7 @@ class SiteController extends Controller
 
         try {
 
-            $order = $shopify('GET /admin/orders/1127053829.json');
+            $order = $shopify('GET /admin/webhooks.json');
 
             echo "<pre>", var_dump($order); die();
 
@@ -315,7 +158,166 @@ class SiteController extends Controller
         }
 
 
-    }*/
+    }
+
+
+    /**
+     * backend method to manually change app installation
+     */
+    public function actionUpdateinstall(){
+
+        $request = Yii::$app->request;
+
+        $user_settings = Usersettings::getByParams(['store_name' => $request->post('store'), 'access_token_hash' => $request->post('hash')]);
+
+        $result = array(
+            'success'	=>	false,
+            'errors' => array()
+        );
+
+        if(is_null($user_settings))
+        {
+            $result['errors'][] = 'Store not found';
+            sleep(3);
+
+        } elseif ($request->post('method') && in_array((string)$request->post('method'), array('install', 'uninstall')) ) {
+
+            /**
+             * @var $shopifyModule \common\components\ShopifyApp
+             */
+            $shopifyModule = \Yii::$app->get('ShopifyApp');
+
+            $settings = $shopifyModule->getAppSettings();
+
+            /**
+             * @var $ShopifyAPI \common\components\ShopifyAPI
+             */
+            $ShopifyAPI = \Yii::$app->get('ShopifyAPI');
+
+            $ShopifyAPI->
+                activateClient($request->post('store'), $settings['api_key'], $user_settings['access_token']);
+
+            \Yii::error('Starting updateinstall for store '.$request->post('store').': '.$request->post('method').'...');
+
+            switch ((string)$request->post('method')){
+
+                case 'install':
+
+                    // install webhooks
+                    try {
+                        $shopifyModule->installWebHooks($ShopifyAPI);
+                    } catch (\Exception $e){
+                        \Yii::error('Webhooks install error: '.$e->getMessage());
+                    }
+
+                    // install carrier services
+                    try{
+                        $shopifyModule->installCarrierServices($ShopifyAPI);
+                    } catch (\Exception $e){
+                        \Yii::error('Carrier install error: '.$e->getMessage());
+                    }
+
+                    // install templates
+                    try{
+                        $shopifyModule->installTemplates($ShopifyAPI);
+                    } catch (\Exception $e){
+                        \Yii::error('Templates install error: '.$e->getMessage());
+                    }
+
+                    $user_settings->is_uninstalled = 0;
+                    $user_settings->save();
+
+                    break;
+
+                case 'uninstall':
+
+                    // uninstall templates
+                    try{
+                        $shopifyModule->uninstallTemplates($ShopifyAPI);
+                    } catch (\Exception $e){
+                        \Yii::error('Templates uninstall error: '.$e->getMessage());
+                    }
+
+                    // uninstall carrier services
+                    try{
+                        $shopifyModule->uninstallCarrierServices($ShopifyAPI);
+                    } catch (\Exception $e){
+                        \Yii::error('Carriers uninstall error: '.$e->getMessage());
+                    }
+
+                    // uninstall webhooks
+                    try{
+                        $shopifyModule->uninstallWebhooks($ShopifyAPI);
+                    } catch (\Exception $e){
+                        \Yii::error('Webhooks uninstall error: '.$e->getMessage());
+                    }
+
+                    $user_settings->is_uninstalled = 1;
+                    $user_settings->save();
+
+                    break;
+
+            }
+
+            \Yii::error('Success updateinstall for store '.$request->post('store').': '.$request->post('method').'...');
+
+            $result['success'] = true;
+        }
+        echo json_encode($result);
+
+    }
+
+    /**
+     * action reset all hooks
+     */
+    public function actionUpdatehooks(){
+
+        $request = Yii::$app->request;
+
+        $user_settings = Usersettings::getByParams(['store_name' => $request->post('store'), 'access_token_hash' => $request->post('hash')]);
+
+        $result = array(
+            'success'	=>	false,
+            'errors' => array()
+        );
+
+        if(is_null($user_settings))
+        {
+            $result['errors'][] = 'Store not found';
+            sleep(3);
+
+        } else {
+
+            \Yii::error('Starting reinstall hooks for store '.$request->post('store').'...');
+
+            /**
+             * @var $shopifyModule \common\components\ShopifyApp
+             */
+            $shopifyModule = \Yii::$app->get('ShopifyApp');
+
+            $settings = $shopifyModule->getAppSettings();
+
+            /**
+             * @var $ShopifyAPI \common\components\ShopifyAPI
+             */
+            $ShopifyAPI = \Yii::$app->get('ShopifyAPI');
+
+            $ShopifyAPI->
+                activateClient($request->post('store'), $settings['api_key'], $user_settings['access_token']);
+
+            // uninstall webhooks
+            $shopifyModule->uninstallWebhooks($ShopifyAPI);
+
+            // install webhooks
+            $shopifyModule->installWebHooks($ShopifyAPI);
+
+            \Yii::error('Success reinstall hooks for store '.$request->post('store').'...');
+
+            $result['success'] = true;
+        }
+        echo json_encode($result);
+
+    }
 
     /**
      * backend action to save config settings
@@ -345,6 +347,10 @@ class SiteController extends Controller
                     $settings->boxit_api_key = $input['value'];
                 if($input['name'] == 'shopandcollect_api_key')
                     $settings->shopandcollect_api_key = $input['value'];
+                if($input['name'] == 'boxit_carrier_cost')
+                    $settings->boxit_carrier_cost = $input['value'];
+                if($input['name'] == 'shopandcollect_carrier_cost')
+                    $settings->shopandcollect_carrier_cost = $input['value'];
             }
             $settings->save();
 

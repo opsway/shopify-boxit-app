@@ -29,7 +29,6 @@ class m150305_154036_init extends Migration
             'shared_secret' =>  'e02fa16a4d14c9166549101eadf6e47a'
         ));
 
-        
         $this->createTable('user_settings', array(
             'id' => Schema::TYPE_PK,
             'access_token' => Schema::TYPE_STRING . ' NOT NULL',

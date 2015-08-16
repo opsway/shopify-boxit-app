@@ -10,28 +10,135 @@
 
     var hideMessages = function ()
     {
-        $('.alert-success').css('display','none');
-        $('.alert-success').css('opacity','0');
-        $('.alert-danger').css('display','none');
-        $('.alert-danger').css('opacity','0');
+        $('#alertError').css('display','none').css('opacity','0');
+        $('#alertSuccess').css('display','none').css('opacity','0');
     };
 
     var showMessage = function(type,text)
     {
-        $('.alert-' + type).css('display','block');
+        $('#alert' + type).css('display','block');
         if(text != undefined)
-            $('.alert-' + type).find('.message').html(text);
-        $('.alert-' + type).animate({
+            $('#alert' + type).find('.message').html(text);
+        $('#alert' + type).animate({
             opacity :   1
         },2000);
     };
 
     $(function(){
 
+        /**
+         * function refresh webhooks
+         */
+        $('#hooks_update').click(function(e){
+
+            e.preventDefault();
+
+            var that = this;
+            $(that).addClass('disabled');
+            $(that).data('old_text', $(that).text()).text('Refreshing hooks...');
+            hideMessages();
+
+            $.ajax({
+                type  :   'POST',
+                url   :   window.boxItApp.updateHooksUrl,
+                dataType : 'json',
+                data  :   {
+                    store : window.boxItApp.storeName,
+                    hash : window.boxItApp.storeHash
+                },
+                success   : function(data)
+                {
+                    var message = "";
+
+                    if(data.success)
+                    {
+                        showMessage('Success');
+
+                    } else
+                    {
+                        $.each(data.errors, function(key,value){
+                            if(message != "")
+                                message += "<br />";
+                            message += '<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span><span class="sr-only">Error:</span>' + value;
+                        });
+                        showMessage('Error', message);
+                    }
+                    $(that).removeClass('disabled');
+                    $(that).text($(that).data('old_text'));
+                }
+            });
+
+        });
+
+
+        /**
+         * function refresh webhooks
+         */
+        $('.btn-install').click(function(e){
+
+            e.preventDefault();
+
+            if (confirm($(this).data('confirm'))){
+
+                var that = this;
+
+                $(that).addClass('disabled');
+                $(that).data('old_text', $(that).text()).text('Update installation...');
+                hideMessages();
+
+                $.ajax({
+                    type  :   'POST',
+                    url   :   window.boxItApp.updateInstallUrl,
+                    dataType : 'json',
+                    data  :   {
+                        store : window.boxItApp.storeName,
+                        hash : window.boxItApp.storeHash,
+                        method : $(that).data('what')
+                    },
+                    success   : function(data)
+                    {
+                        var message = "";
+
+                        if(data.success)
+                        {
+                            showMessage('Success');
+
+                        } else
+                        {
+                            $.each(data.errors, function(key,value){
+                                if(message != "")
+                                    message += "<br />";
+                                message += '<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span><span class="sr-only">Error:</span>' + value;
+                            });
+                            showMessage('Error', message);
+                        }
+                        $(that).removeClass('disabled');
+                        $(that).text($(that).data('old_text'));
+
+                        $(that).hide();
+                        if ($(that).data('what') == 'install'){
+                            $('.btn-what-uninstall').show();
+                            $('#alertUninstalled').hide(100);
+                            $('#boxit_api_key, #shopandcollect_api_key, #boxit_carrier_cost, #shopandcollect_carrier_cost, #btnSubmitSettings, #hooks_update').removeClass('disabled').removeProp('disabled');
+                        } else {
+                            $('.btn-what-install').show();
+                            $('#alertUninstalled').show(100);
+                            $('#boxit_api_key, #shopandcollect_api_key, #boxit_carrier_cost, #shopandcollect_carrier_cost, #btnSubmitSettings, #hooks_update').addClass('disabled').prop('disabled', 'disabled');
+                        }
+                    }
+                });
+
+            }
+
+        });
+
+        /**
+         * save settings to the backend
+         */
         $('#btnSubmitSettings').on('click',function(){
             var that = this;
             $(that).addClass('disabled');
-            $(that).text('Saving...');
+            $(that).data('old_text', $(that).text()).text('Saving...');
             hideMessages();
 
             $.ajax({
@@ -49,7 +156,7 @@
 
                     if(data.success)
                     {
-                        showMessage('success');
+                        showMessage('Success');
 
                     } else
                     {
@@ -58,13 +165,20 @@
                                 message += "<br />";
                             message += '<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span><span class="sr-only">Error:</span>' + value;
                         });
-                        showMessage('danger', message);
+                        showMessage('Error', message);
                     }
                     $(that).removeClass('disabled');
-                    $(that).text('Save');
+                    $(that).text($(that).data('old_text'));
                 }
             });
         });
+
+        // check for current disabled status
+        if ($('.btn-what-uninstall').css('display') == 'none'){
+            $('#boxit_api_key, #shopandcollect_api_key, #boxit_carrier_cost, #shopandcollect_carrier_cost, #btnSubmitSettings, #hooks_update').addClass('disabled').prop('disabled', 'disabled');
+            $('#alertUninstalled').show();
+        }
+
     });
 
 })();

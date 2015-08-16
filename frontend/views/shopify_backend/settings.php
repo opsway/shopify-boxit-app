@@ -20,6 +20,8 @@
         window.boxItApp = {
             appUrl : '<?=$app_url?>',
             saveUrl : '<?=$app_url?>/index.php?r=site/saveconfig',
+            updateHooksUrl : '<?=$app_url?>/index.php?r=site/updatehooks',
+            updateInstallUrl : '<?=$app_url?>/index.php?r=site/updateinstall',
             storeName : '<?=$user_settings['store_name']?>',
             storeHash : '<?=$user_settings['access_token_hash']?>'
         };
@@ -34,14 +36,14 @@
 <body>
 
     <div class="notification-container">
-        <div class="alert alert-danger" role="alert" style="display:none;opacity:0;">
+        <div class="alert alert-danger" role="alert" style="display:none;opacity:0;" id="alertError">
             <div class="message">
                 <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
                 <span class="sr-only">Error:</span>
                 Enter a valid data
             </div>
         </div>
-        <div class="alert alert-success" role="alert" style="display:none;opacity:0;">
+        <div class="alert alert-success" role="alert" style="display:none;opacity:0;" id="alertSuccess">
             <div class="message">
                 <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
                 <span class="sr-only">OK!</span>
@@ -58,17 +60,71 @@
 
     <div class="section section-dashboard">
 
+        <div id="alertUninstalled" class="alert alert-danger" role="alert" <?php if ($user_settings['is_uninstalled'] == 0): ?>style="display: none"<? endif; ?>>
+            <strong>Warning!</strong> Your app is uninstalled. You need to click `Reinstall app` button to enable functionality
+        </div>
+
+
         <form id="formData" action="#">
-            <div class="form-group">
-                <label for="boxit_api_key">BoxIt API Key</label>
-                <input type="text" class="form-control" name="boxit_api_key" id="boxit_api_key" placeholder="Enter BoxIt API key" value="<?=(empty($user_settings['boxit_api_key']) ? "" : htmlspecialchars($user_settings['boxit_api_key']))?>">
+
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">API keys</h3>
+                </div>
+                <div class="panel-body">
+
+                    <div class="form-group">
+                        <label for="boxit_api_key">BoxIt API Key</label>
+                        <input type="text" class="form-control" name="boxit_api_key" id="boxit_api_key" placeholder="Enter BoxIt API key" value="<?=(empty($user_settings['boxit_api_key']) ? "" : htmlspecialchars($user_settings['boxit_api_key']))?>">
+                    </div>
+                    <div class="form-group">
+                        <label for="shopandcollect_api_key">Shop&amp;Collect API Key</label>
+                        <input type="text" class="form-control" name="shopandcollect_api_key" id="shopandcollect_api_key" placeholder="Enter Shop&amp;Collect API key" value="<?=(empty($user_settings['shopandcollect_api_key']) ? "" : htmlspecialchars($user_settings['shopandcollect_api_key']))?>">
+                    </div>
+
+                </div>
+
             </div>
-            <div class="form-group">
-                <label for="shopandcollect_api_key">Shop&amp;Collect API Key</label>
-                <input type="text" class="form-control" name="shopandcollect_api_key" id="shopandcollect_api_key" placeholder="Enter Shop&amp;Collect API key" value="<?=(empty($user_settings['shopandcollect_api_key']) ? "" : htmlspecialchars($user_settings['shopandcollect_api_key']))?>">
+
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Carrier service settings</h3>
+                </div>
+                <div class="panel-body">
+
+                    <div class="form-group">
+                        <label for="boxit_api_key">BoxIt carrier delivery cost *</label>
+                        <input type="text" class="form-control" name="boxit_carrier_cost" id="boxit_carrier_cost" placeholder="Enter BoxIt carrier cost" value="<?=(empty($user_settings['boxit_carrier_cost']) ? "" : htmlspecialchars($user_settings['boxit_carrier_cost']))?>">
+                    </div>
+                    <div class="form-group">
+                        <label for="shopandcollect_api_key">Shop&amp;Collect carrier delivery cost *</label>
+                        <input type="text" class="form-control" name="shopandcollect_carrier_cost" id="shopandcollect_carrier_cost" placeholder="Enter Shop&amp;Collect carrier cost" value="<?=(empty($user_settings['shopandcollect_carrier_cost']) ? "" : htmlspecialchars($user_settings['shopandcollect_carrier_cost']))?>">
+                    </div>
+
+                    <div class="alert alert-info" role="alert">
+                        * Currency will be used from shop settings
+                    </div>
+                </div>
+
             </div>
 
         </form>
+
+        <div class="alert alert-warning" role="alert">
+            <strong>Warning!</strong> Before uninstalling app from the apps list - press the "Uninstall app" button below. Then the garbage from the App will be removed correctly.
+        </div>
+
+        <div class="form-group clear">
+            <div class="float-right">
+                <button class="btn btn-success" id="hooks_update">Refresh hooks</button>
+            </div>
+
+            <div class="float-right">
+                <button class="btn btn-warning btn-install btn-what-install" data-confirm="Are you sure? Do you want to install again all hooks and templates?" data-what="install" <?php if ($user_settings['is_uninstalled'] == 0): ?>style="display: none"<?php endif; ?>>Reinstall app</button>
+                <button class="btn btn-danger btn-install btn-what-uninstall" data-confirm="Are you sure? Do you want to uninstall all hooks and templates?" data-what="uninstall" <?php if ($user_settings['is_uninstalled'] == 1): ?>style="display: none"<?php endif; ?>>Uninstall app</button>
+            </div>
+
+        </div>
 
     </div>
 

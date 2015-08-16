@@ -37,8 +37,14 @@ return [
             // for the mailer to send real emails.
             'useFileTransport' => true,
         ],
-        'BoxItApi' => [
-            'class' => 'common\components\BoxItApi',
-        ]
+        'BoxItAPI' => [
+            'class' => 'common\components\BoxItAPI',
+        ],
+        'ShopifyAPI' => [
+            'class' => 'common\components\ShopifyAPI',
+        ],
+        'ShopifyApp' => [
+            'class' => 'common\components\ShopifyApp',
+        ],
     ],
 ];

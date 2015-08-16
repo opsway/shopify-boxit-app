@@ -1,23 +1,5 @@
 jQuery(function(){
 
-    var box_cookie = 'boxitsess';
-    var box_cookie_tout = 100*24*60*60*1000;
-
-    /**
-     * function set boxit session value
-     * @param session
-     */
-    var setSessionValue = function(session){
-        var d = new Date();
-        d = d.setTime(d.getTime() + box_cookie_tout);
-        if (d && d.toUTCString) {
-            d = d.toUTCString();
-        }
-
-        ows_setcookie(box_cookie, session, d, '/');
-
-    };
-
     var validatePhone = function ()
     {
         var regexpNum = /\d+/;
@@ -35,50 +17,6 @@ jQuery(function(){
                 str += text[i];
         }
         return str;
-    };
-
-    /**
-     * cookies library
-     *
-     * @author goshi
-     * @package javascript::share
-     */
-    var ows_setcookie = function (name, value, expires, path, domain, secure) {
-        document.cookie = name + "=" + escape(value) +
-            ((expires) ? "; expires=" + expires : "") +
-            ((path) ? "; path=" + path : "") +
-            ((domain) ? "; domain=" + domain : "") +
-            ((secure) ? "; secure" : "");
-    };
-
-    var ows_getcookie = function (name) {
-        var cookie = " " + document.cookie;
-        var search = " " + name + "=";
-        var setStr = null;
-        var offset = 0;
-        var end = 0;
-        if (cookie.length > 0) {
-            offset = cookie.indexOf(search);
-            if (offset != -1) {
-                offset += search.length;
-                end = cookie.indexOf(";", offset);
-                if (end == -1) {
-                    end = cookie.length;
-                }
-                setStr = unescape(cookie.substring(offset, end));
-            }
-        }
-        return(setStr);
-    };
-
-    var ows_deletecookie = function(name) {
-        var d = new Date();
-        d = d.setTime(d.getTime() + -1*1000);
-        if (d && d.toUTCString) {
-            d = d.toUTCString();
-        }
-
-        ows_setcookie(name, "", d, '/')
     };
 
     var saveData = function ()
@@ -100,13 +38,13 @@ jQuery(function(){
                 'shop' : jQuery('#shop').val(),
                 'type'	: jQuery('input[type="radio"]:checked').val(),
                 'address' : address.trim(),
-                'session' : ows_getcookie(box_cookie)
+                'session' : window.OwsBootstrap.getSessionValue()
             },
             'success' : function(data) {
                 //console.info('OK');
 
                 if (data && data.session){
-                    setSessionValue(data.session);
+                    window.OwsBootstrap.setSessionValue(data.session);
                 }
 
             }
@@ -114,17 +52,6 @@ jQuery(function(){
     }
 
 
-    // check if we have session
-    // if not - get current shop session cookie
-    if (!ows_getcookie(box_cookie) && ows_getcookie('_session_id')){
-        var d = new Date();
-        d = d.setTime(d.getTime() + box_cookie_tout);
-        if (d && d.toUTCString) {
-            d = d.toUTCString();
-        }
-
-        ows_setcookie(box_cookie, ows_getcookie('_session_id'), d, '/');
-    }
 
     jQuery('input[type="radio"]').change(function(){
         saveData();
@@ -200,7 +127,7 @@ jQuery(function(){
         'crossDomain' : true,
         'data' : {
             'shop' : jQuery('#shop').val(),
-            'session' : ows_getcookie(box_cookie)
+            'session' : window.OwsBootstrap.getSessionValue()
         },
         'success' : function(json) {
             //console.info(json.locker_id > 0);
@@ -209,7 +136,7 @@ jQuery(function(){
 
             // set session value
             if (json && json.session){
-                setSessionValue(json.session);
+                window.OwsBootstrap.setSessionValue(json.session);
             }
 
             if(json.locker_id > 0 && validatePhone())

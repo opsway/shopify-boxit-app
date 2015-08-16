@@ -794,3 +794,10 @@ h2 .cool_too_tip {
     color: #999;
     font-size: 12px;
 }
+
+/*?=bottom buttons
+---------------------------------*/
+.float-right {
+    float: right;
+    margin-left: 10px;
+}
