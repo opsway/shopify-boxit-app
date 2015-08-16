@@ -4,8 +4,8 @@ return [
         'db' => [
             'class' => 'yii\db\Connection',
             'dsn' => 'mysql:host=localhost;dbname=boxit',
-            'username' => 'webT',
-            'password' => 'webT4ever',
+            'username' => 'opsway',
+            'password' => 'opsOoopsWay1',
             'charset' => 'utf8',
         ],
         'log' => [
