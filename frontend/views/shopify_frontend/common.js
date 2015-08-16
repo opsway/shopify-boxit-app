@@ -26,10 +26,12 @@ jQuery(function(){
     var substring = function (text,start,end)
     {
         var str = '';
-        for(i = start; i != end; i = i + 1)
-        {
-            if(text[i] != undefined)
-                str += text[i];
+        if (text != null){
+            for(i = start; i != end; i = i + 1)
+            {
+                if(text[i] != undefined)
+                    str += text[i];
+            }
         }
         return str;
     };
@@ -67,6 +69,9 @@ jQuery(function(){
 
     // waiting for main app file
     syncEvent(function(){
+
+        if (typeof console != 'undefined' && typeof console.log == 'function')
+            console.log('Ows app initialized');
 
         jQuery('input[type="radio"]').change(function(){
             saveData();
@@ -211,5 +216,8 @@ jQuery(function(){
             }
         }
 
-    }, 'typeof window.OwsBootstrap != "undefined" && window.OwsBootstrap');
+    }, 'typeof window.OwsBootstrap != "undefined"');
+
+    if (typeof console != 'undefined' && typeof console.log == 'function')
+        console.log('start search OwsBootstrap...');
 });
