@@ -18,7 +18,7 @@ use common\models\Usercart;
 use common\models\Usersettings;
 use Yii;
 
-class FulfillmentController extends ShopifyController
+class FulfillmentsController extends ShopifyController
 {
 
 
