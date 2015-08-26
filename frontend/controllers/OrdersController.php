@@ -28,8 +28,8 @@ class OrdersController extends ShopifyController{
      */
     protected $_shippings_map = array(
         'boxit' => 'boxit',
-        'shopcollect' => 'shop_collect',
-        'shopandcollect' => 'shop_collect',
+        'shopcollect' => 'shopandcollect',
+        'shopandcollect' => 'shopandcollect',
     );
 
     public $enableCsrfValidation = false;

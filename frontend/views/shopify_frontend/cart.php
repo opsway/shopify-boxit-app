@@ -8,9 +8,9 @@
         }
 
         .b-boxit-container .method {
-            float: left;
-            height: 70px;
+            display: block;
             margin-left: 14px;
+            margin-bottom: 20px;
         }
 
         .b-boxit-container .method span {
@@ -40,9 +40,25 @@
             -webkit-appearance: checkbox;
         }
 
+        .b-boxit-preloader {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 20px;
+            border-radius: 4px;
+            -webkit-border-radius: 4px;
+            -moz-border-radius: 4px;
+            border: 1px solid #bce8f1;
+            color: #31708f;
+            background-color: #d9edf7;
+        }
+
 </style>
 
-<div class="b-boxit-container">
+<div class="b-boxit-preloader" style="display: none">
+    Please wait, while we loading additional delivery settings...
+</div>
+
+<div class="b-boxit-container" style="display: none">
     <input type="hidden" id="customer_id" value="{% if customer %}{{ customer.id }}{% endif %}" />
     <input type="hidden" id="shop" value="{{ shop.url }}" />
     <h3 class="title">Delivery options:</h3>
@@ -54,16 +70,16 @@
         </label>
     </div>
 
-    <div class='method'>
+    <div class='method' id="boxit-delivery-radio-boxit">
         <input id='delivery_method_boxit' type='radio' name='delivery_method' value='boxit' />
         <label for='delivery_method_boxit'>
             Boxit delivery
         </label>
     </div>
 
-    <div class='method'>
-        <input id='delivery_method_shop_collect' type='radio' name='delivery_method' value='shop_collect' />
-        <label for='delivery_method_shop_collect'>
+    <div class='method' id="boxit-delivery-radio-shopandcollect">
+        <input id='delivery_method_shopandcollect' type='radio' name='delivery_method' value='shopandcollect' />
+        <label for='delivery_method_shopandcollect'>
             Shop&amp;Collect delivery
         </label>
     </div>

@@ -144,6 +144,14 @@ class AppController extends ShopifyController
             'type' => $cart->type,
         );
 
+        // get info about possible APIs
+        $userSettings = Usersettings::getByParams(['store_name' => $shop]);
+        $data['api_exists'] = array();
+        if ($userSettings){
+            $data['api_exists']['boxit'] = trim($userSettings->boxit_api_key) != '' ? true : false;
+            $data['api_exists']['shopandcollect'] = trim($userSettings->shopandcollect_api_key) != '' ? true : false;
+        }
+
         if ($session_created){
             $data['session'] = $session;
         }
