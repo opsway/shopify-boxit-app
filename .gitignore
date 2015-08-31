@@ -18,6 +18,9 @@ Thumbs.db
 # composer vendor dir
 /vendor
 
+# hide local config
+/common/config/main-local.php
+
 # composer itself is not needed
 composer.phar
 
