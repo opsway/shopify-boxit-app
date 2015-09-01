@@ -75,7 +75,7 @@
         // method extract base path for app
         var getBasePath = function(){
 
-            var p = getScriptURL.split('/shopify_frontend/');
+            var p = getScriptURL().split('/shopify_frontend/');
             return p[0];
 
         };
