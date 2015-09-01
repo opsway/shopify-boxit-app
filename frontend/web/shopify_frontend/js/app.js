@@ -76,6 +76,7 @@
         var getBasePath = function(){
 
             var p = getScriptURL().split('/shopify_frontend/');
+            console.log(p);
             return p[0];
 
         };
@@ -148,7 +149,7 @@
 
             getExternalAppPath : function(){
 
-                return getBasePath;
+                return getBasePath();
 
             }
 
