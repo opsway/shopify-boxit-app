@@ -352,6 +352,9 @@ class SiteController extends ShopifyController
                     $settings->boxit_carrier_cost = $input['value'];
                 if($input['name'] == 'shopandcollect_carrier_cost')
                     $settings->shopandcollect_carrier_cost = $input['value'];
+                if($input['name'] == 'checkout_button_id')
+                    $settings->checkout_button_id = $input['value'];
+
             }
             $settings->save();
 

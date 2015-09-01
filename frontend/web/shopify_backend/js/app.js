@@ -119,11 +119,11 @@
                         if ($(that).data('what') == 'install'){
                             $('.btn-what-uninstall').show();
                             $('#alertUninstalled').hide(100);
-                            $('#boxit_api_key, #shopandcollect_api_key, #boxit_carrier_cost, #shopandcollect_carrier_cost, #btnSubmitSettings, #hooks_update').removeClass('disabled').removeProp('disabled');
+                            $('#boxit_api_key, #shopandcollect_api_key, #boxit_carrier_cost, #shopandcollect_carrier_cost, #btnSubmitSettings, #hooks_update, #checkout_button_id').removeClass('disabled').removeProp('disabled');
                         } else {
                             $('.btn-what-install').show();
                             $('#alertUninstalled').show(100);
-                            $('#boxit_api_key, #shopandcollect_api_key, #boxit_carrier_cost, #shopandcollect_carrier_cost, #btnSubmitSettings, #hooks_update').addClass('disabled').prop('disabled', 'disabled');
+                            $('#boxit_api_key, #shopandcollect_api_key, #boxit_carrier_cost, #shopandcollect_carrier_cost, #btnSubmitSettings, #hooks_update, #checkout_button_id').addClass('disabled').prop('disabled', 'disabled');
                         }
                     }
                 });
@@ -175,7 +175,7 @@
 
         // check for current disabled status
         if ($('.btn-what-uninstall').css('display') == 'none'){
-            $('#boxit_api_key, #shopandcollect_api_key, #boxit_carrier_cost, #shopandcollect_carrier_cost, #btnSubmitSettings, #hooks_update').addClass('disabled').prop('disabled', 'disabled');
+            $('#boxit_api_key, #shopandcollect_api_key, #boxit_carrier_cost, #shopandcollect_carrier_cost, #btnSubmitSettings, #hooks_update, #checkout_button_id').addClass('disabled').prop('disabled', 'disabled');
             $('#alertUninstalled').show();
         }
 

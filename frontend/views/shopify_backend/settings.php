@@ -108,6 +108,21 @@
 
             </div>
 
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Additional settings</h3>
+                </div>
+                <div class="panel-body">
+
+                    <div class="form-group">
+                        <label for="boxit_api_key">Checkout button ID (if you are using non-standard checkout template you need to define button ID to handle it on delivery change). Default value is "checkout"</label>
+                        <input type="text" class="form-control" name="checkout_button_id" id="checkout_button_id" placeholder="Example: checkout" value="<?=(empty($user_settings['checkout_button_id']) ? "" : htmlspecialchars($user_settings['checkout_button_id']))?>">
+                    </div>
+
+                </div>
+
+            </div>
+
         </form>
 
         <div class="alert alert-warning" role="alert">

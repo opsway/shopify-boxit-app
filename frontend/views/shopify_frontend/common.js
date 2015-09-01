@@ -2,6 +2,23 @@ jQuery(function(){
 
     // flag determines, if any of API exists
     var isAPIExists = null;
+    var appSettings = null;
+
+    /**
+     * method get value from loaded application settings (if no value default_value returned)
+     * @param setting
+     * @param default_value
+     * @returns {*}
+     */
+    var getAppSetting = function(setting, default_value){
+
+        if (appSettings && typeof appSettings[setting] != 'undefined' && appSettings[setting] != ''){
+            return appSettings[setting];
+        } else {
+            return default_value;
+        }
+
+    };
 
     var syncEvent = function(k, condition){
 
@@ -96,12 +113,12 @@ jQuery(function(){
     var applyValidation = function(is_valid){
         if(is_valid)
         {
-            jQuery('#checkout').attr('disabled',false);
+            jQuery('#'+getAppSetting('checkout_button_id', 'checkout')).attr('disabled',false);
             jQuery('.b-boxit-container .pickup_mobile').removeClass('error')
                 .addClass('success');
             jQuery('#phone-message').hide();
         } else {
-            jQuery('#checkout').attr('disabled',true);
+            jQuery('#'+getAppSetting('checkout_button_id', 'checkout')).attr('disabled',true);
             jQuery('.b-boxit-container .pickup_mobile').attr('id','inputWarning2')
                 .removeClass('success')
                 .addClass('error');
@@ -131,10 +148,10 @@ jQuery(function(){
         jQuery('.b-boxit-container .method input').change(function(){
             if(jQuery(this).val() == 'other')
             {
-                jQuery('#checkout').attr('disabled',false);
+                jQuery('#'+getAppSetting('checkout_button_id', 'checkout')).attr('disabled',false);
                 jQuery('.b-boxit-container .inputField').hide();
             } else {
-                //jQuery('#checkout').attr('disabled',true);
+                //jQuery('#'+getAppSetting('checkout_button_id', 'checkout')).attr('disabled',true);
                 jQuery('.b-boxit-container .inputField').show();
                 applyValidation(validateLockerId() && validatePhone());
             }
@@ -147,7 +164,7 @@ jQuery(function(){
         });
 
         // temporary block checkout button until we will get info about API keys and oldcart data
-        jQuery('#checkout').attr('disabled',true);
+        jQuery('#'+getAppSetting('checkout_button_id', 'checkout')).attr('disabled',true);
         // show preloader
         jQuery('.b-boxit-preloader').show(50);
 
@@ -172,6 +189,11 @@ jQuery(function(){
                 // set session value
                 if (json && json.session){
                     window.OwsBootstrap.setSessionValue(json.session);
+                }
+
+                // get app settings
+                if (json.app_settings){
+                    appSettings = json.app_settings;
                 }
 
                 // check if api keys exists
@@ -201,7 +223,7 @@ jQuery(function(){
                 }
 
                 // unblock checkout button
-                jQuery('#checkout').removeAttr('disabled');
+                jQuery('#'+getAppSetting('checkout_button_id', 'checkout')).removeAttr('disabled');
 
                 if (isAPIExists){
                     if(json.locker_id > 0 && validatePhone())
@@ -245,7 +267,7 @@ jQuery(function(){
 
         /*if(jQuery('.b-boxit-container .method input:checked').val() == 'other')
         {
-            jQuery('#checkout').attr('disabled',false);
+            jQuery('#'+getAppSetting('checkout_button_id', 'checkout')).attr('disabled',false);
         } else {
             console.info(validatePhone());
             applyValidation(validatePhone());
