@@ -174,7 +174,7 @@
         var updateOrder = function(){
             jQuery.ajax({
                 'type' : 'POST',
-                'url'  : 'https://'+window.OwsBootstrap.getExternalAppDomain()+'/index.php?r=app/updateorder',
+                'url'  : 'https://'+window.OwsBootstrap.getExternalAppPath()+'/index.php?r=app/updateorder',
                 'dataType' : 'json',
                 'crossDomain' : true,
                 'data' : {
@@ -198,7 +198,7 @@
 
             var s = document.createElement('script');
             s.type = 'text/javascript';
-            s.src = 'https://'+window.OwsBootstrap.getExternalAppDomain()+'/components/jquery/dist/jquery.min.js';
+            s.src = 'https://'+window.OwsBootstrap.getExternalAppPath()+'/components/jquery/dist/jquery.min.js';
             var x = document.getElementsByTagName('script')[0];
             x.parentNode.insertBefore(s, x);
 
