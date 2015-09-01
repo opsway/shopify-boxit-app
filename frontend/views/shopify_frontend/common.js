@@ -84,7 +84,7 @@ jQuery(function(){
 
         jQuery.ajax({
             'type' : 'POST',
-            'url'  : 'https://'+window.OwsBootstrap.getExternalAppDomain()+'/index.php?r=app/save',
+            'url'  : 'https://'+window.OwsBootstrap.getExternalAppPath()+'/index.php?r=app/save',
             'dataType' : 'json',
             'crossDomain' : true,
             'data' : {
@@ -171,7 +171,7 @@ jQuery(function(){
         // get info about api keys and cart data
         jQuery.ajax({
             'type' : 'POST',
-            'url'  : 'https://'+window.OwsBootstrap.getExternalAppDomain()+'/index.php?r=app/cart&shop=' + jQuery('#shop').val(),
+            'url'  : 'https://'+window.OwsBootstrap.getExternalAppPath()+'/index.php?r=app/cart&shop=' + jQuery('#shop').val(),
             'dataType' : 'json',
             'crossDomain' : true,
             'data' : {

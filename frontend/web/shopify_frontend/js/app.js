@@ -72,6 +72,14 @@
             return function() { return myScript ? myScript.src : myScript; };
         })();
 
+        // method extract base path for app
+        var getBasePath = function(){
+
+            var p = getScriptURL.split('/shopify_frontend/');
+            return p[0];
+
+        };
+
         // check if we have session
         // if not - get current shop session cookie
         if (/*!c.getCookie(box_cookie) && */c.getCookie('_shopify_s')){
@@ -135,6 +143,12 @@
                     domain = src[0];
                 }
                 return domain;
+
+            },
+
+            getExternalAppPath : function(){
+
+                return getBasePath;
 
             }
 
