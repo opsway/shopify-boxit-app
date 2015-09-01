@@ -149,7 +149,7 @@
 
             getExternalAppPath : function(){
 
-                return getBasePath();
+                return getBasePath().replace('https://', '');
 
             }
 
