@@ -137,12 +137,17 @@ class AppController extends ShopifyController
         }
 
         $cart = Usercart::getByParams(['store_name' => $shop, 'session' => $session, 'is_complete' => 0]);
-        $data = array(
-            'locker_id' => $cart->locker_id,
-            //'email' => $cart->email,
-            'phone' => $cart->phone,
-            'type' => $cart->type,
-        );
+
+        if ($cart){
+            $data = array(
+                'locker_id' => $cart->locker_id,
+                //'email' => $cart->email,
+                'phone' => $cart->phone,
+                'type' => $cart->type,
+            );
+        } else {
+            $data = array();
+        }
 
         // get info about possible APIs
         $userSettings = Usersettings::getByParams(['store_name' => $shop]);
