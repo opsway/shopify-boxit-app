@@ -483,5 +483,31 @@ class ShopifyApp extends \yii\base\Component
 
     }
 
+    /**
+     * method checks if access token broken
+     * @param ShopifyAPI $ShopifyAPI
+     * @return bool
+     */
+    public function isAccessTokenValid(ShopifyAPI $ShopifyAPI){
+
+        try {
+
+            $result = $ShopifyAPI->getShop();
+
+            if ($result){
+                return true;
+            } else {
+                return false;
+            }
+
+        } catch (\Exception $e){
+
+            \Yii::error($e->getMessage(), 'shopifyApp/checkAccessTokenValidation');
+            return false;
+
+        }
+
+
+    }
 
 }

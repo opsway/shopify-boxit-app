@@ -147,7 +147,7 @@ class AppController extends ShopifyController
             );
         } else {
             $data = array();
-        } 
+        }
 
         // get info about possible APIs
         $userSettings = Usersettings::getByParams(['store_name' => $shop]);

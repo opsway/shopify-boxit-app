@@ -56,22 +56,9 @@ class SiteController extends ShopifyController
             $ShopifyAPI->
                 activateClient($shop, $settings['api_key'], $access_token);
 
-            // prepare webhooks
+            // prepare webhooks for all
+            $shopifyModule->uninstallWebHooks($ShopifyAPI);
             $shopifyModule->installWebHooks($ShopifyAPI);
-
-            /**
-             * uncomment when you will know how much BoxIt get paid for delivery
-             */
-            /*$arguments = array(
-                    'carrier_service'	=>	array(
-                            'name' => 'Boxit',
-                            'callback_url' => (\Yii::$app->params['base_api_url'] ? \Yii::$app->params['base_api_url'] : 'https://apps.opsway.com/shopify/boxit/frontend/web').'/index.php?r=boxit/carrier',
-                            'format' => 'json',
-                            'service_discovery' => true
-                    )
-            );
-
-            $shopify('POST /admin/carrier_services.json', array(), $arguments); */
 
             // install carrier services
             $shopifyModule->installCarrierServices($ShopifyAPI);
@@ -79,12 +66,20 @@ class SiteController extends ShopifyController
             // install templates
             $old_cart = $shopifyModule->installTemplates($ShopifyAPI);
 
+            // now check if user always in our database
+            $userSettings = Usersettings::getByParams(['store_name' => $shop]);
 
-            $userSettings = new Usersettings();
-            $userSettings->access_token = $access_token;
-            $userSettings->store_name = $shop;
-            $userSettings->old_cart = $old_cart;
-            $userSettings->access_token_hash = md5($access_token . $shop . \Yii::$app->params['store_hash_salt']);
+            if ($userSettings){
+                $userSettings->access_token = $access_token;
+                $userSettings->old_cart = $old_cart;
+                $userSettings->access_token_hash = md5($access_token . $shop . \Yii::$app->params['store_hash_salt']);
+            } else {
+                $userSettings = new Usersettings();
+                $userSettings->access_token = $access_token;
+                $userSettings->store_name = $shop;
+                $userSettings->old_cart = $old_cart;
+                $userSettings->access_token_hash = md5($access_token . $shop . \Yii::$app->params['store_hash_salt']);
+            }
             $userSettings->save();
 
             $this->redirect('https://' . $shop . '/admin/apps', 302);
@@ -93,8 +88,9 @@ class SiteController extends ShopifyController
 
             $userSettings = Usersettings::getByParams(['store_name' => $shop]);
 
+            // make additional call, maybe we lost API key
             // For example when we try to install the app from App store (https://apps.shopify.com/boxit-connector).
-            if (empty($userSettings)) {
+            if (empty($userSettings) && ($is_access_token_valid = $shopifyModule->isAccessTokenValid($ShopifyAPI))) {
                 // Get the permission url.
                 $permission_url = $ShopifyAPI->getAuthorizationUrl(
                     $shop,

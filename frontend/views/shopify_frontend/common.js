@@ -181,7 +181,7 @@ jQuery(function(){
             'success' : function(json) {
                 //console.info(json.locker_id > 0);
                 //console.info(json.phone.length > 0);
-                console.info(json);
+                //console.info(json);
 
                 // hide preloader
                 jQuery('.b-boxit-preloader').stop().hide(50);
