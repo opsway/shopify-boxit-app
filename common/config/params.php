@@ -18,7 +18,9 @@ return [
         'carrier_services' => [
             /**
              * format of the carrier services:
-             * `Name` => `action controller`
+             * `Name` => `action controller`,
+             *  Unfortunately, Shopify on 2015 allow only one additional carrier method per on app,
+             * so we always add BoxIt method
              */
             'BoxIt' => 'boxit',
             'Shop&Collect'  => 'shopandcollect'

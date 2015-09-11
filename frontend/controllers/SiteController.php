@@ -60,9 +60,6 @@ class SiteController extends ShopifyController
             $shopifyModule->uninstallWebHooks($ShopifyAPI);
             $shopifyModule->installWebHooks($ShopifyAPI);
 
-            // install carrier services
-            $shopifyModule->installCarrierServices($ShopifyAPI);
-
             // install templates
             $old_cart = $shopifyModule->installTemplates($ShopifyAPI);
 
@@ -81,6 +78,11 @@ class SiteController extends ShopifyController
                 $userSettings->access_token_hash = md5($access_token . $shop . \Yii::$app->params['store_hash_salt']);
             }
             $userSettings->save();
+
+            // install carrier services
+            if (trim($userSettings->boxit_api_key) != '' || trim($userSettings->shopandcollect_api_key) != ''){
+                $shopifyModule->installCarrierServices($ShopifyAPI);
+            }
 
             $this->redirect('https://' . $shop . '/admin/apps', 302);
 
@@ -360,6 +362,35 @@ class SiteController extends ShopifyController
             $settings->save();
 
             $result['success'] = true;
+
+            // additionaly checking for exists Boxit/Shopandcollect methods
+            /**
+             * @var $shopifyModule \common\components\ShopifyApp
+             */
+            $shopifyModule = \Yii::$app->get('ShopifyApp');
+
+            /**
+             * @var $ShopifyAPI \common\components\ShopifyAPI
+             */
+            $ShopifyAPI = \Yii::$app->get('ShopifyAPI');
+            $ShopifyAPI->handleRequest();
+
+            // send API call to the BoxIt
+            $appSettings = $shopifyModule->getAppSettings();
+            $ShopifyAPI->activateClient($ShopifyAPI->getRequestShop(), $appSettings['api_key'], $settings->access_token);
+
+            // turn off delivery service
+            $shopifyModule->uninstallCarrierServices($ShopifyAPI);
+
+            if (trim($settings->boxit_api_key) != '' || trim($settings->shopandcollect_api_key) != ''){
+                // turn on delivery service
+                $shopifyModule->uninstallCarrierServices($ShopifyAPI);
+            }
+
+            unset($ShopifyAPI);
+            unset($shopifyModule);
+            unset($appSettings);
+
         }
         echo json_encode($result);
     }
