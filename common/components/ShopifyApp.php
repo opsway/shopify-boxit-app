@@ -129,9 +129,10 @@ class ShopifyApp extends \yii\base\Component
             // add carrier service
             \Yii::error('Install carrier: boxit');
             try {
+                // always add timestamp to the URL to change carrier service
                 $ShopifyAPI->addCarrierService([
                     "name" => 'BoxIt',
-                    "callback_url" => (\Yii::$app->params['base_api_url'] ? \Yii::$app->params['base_api_url'] : 'https://apps.opsway.com/shopify/boxit/frontend/web').'/index.php?r=boxit/carrier',
+                    "callback_url" => (\Yii::$app->params['base_api_url'] ? \Yii::$app->params['base_api_url'] : 'https://apps.opsway.com/shopify/boxit/frontend/web').'/index.php?r=boxit/carrier&tstamp='.time(),
                     "format" => "json",
                     "service_discovery" => true
                 ]);

@@ -64,6 +64,9 @@
             <strong>Warning!</strong> Your app is uninstalled. You need to click `Reinstall app` button to enable functionality
         </div>
 
+        <div id="alertNoAPIKeys" class="alert alert-danger" role="alert" <?php if (trim($user_settings['boxit_api_key']) != '' || trim($user_settings['boxit_api_key']) != ''): ?>style="display: none"<? endif; ?>>
+            <strong>Warning!</strong> You need to enter one of the API keys below to enable BoxIt carrier service.
+        </div>
 
         <form id="formData" action="#">
 

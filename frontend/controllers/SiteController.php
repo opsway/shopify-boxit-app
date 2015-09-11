@@ -215,10 +215,14 @@ class SiteController extends ShopifyController
                     }
 
                     // install carrier services
-                    try{
-                        $shopifyModule->installCarrierServices($ShopifyAPI);
-                    } catch (\Exception $e){
-                        \Yii::error('Carrier install error: '.$e->getMessage());
+                    if (trim($user_settings['boxit_api_key']) != '' || trim($user_settings['shopandcollect_api_key']) != ''){
+
+                        try{
+                            $shopifyModule->installCarrierServices($ShopifyAPI);
+                        } catch (\Exception $e){
+                            \Yii::error('Carrier install error: '.$e->getMessage());
+                        }
+
                     }
 
                     // install templates
@@ -380,11 +384,19 @@ class SiteController extends ShopifyController
             $ShopifyAPI->activateClient($ShopifyAPI->getRequestShop(), $appSettings['api_key'], $settings->access_token);
 
             // turn off delivery service
-            $shopifyModule->uninstallCarrierServices($ShopifyAPI);
+            try{
+                $shopifyModule->uninstallCarrierServices($ShopifyAPI);
+            } catch (\Exception $e){
+                \Yii::error('Carrier uninstall error: '.$e->getMessage());
+            }
 
             if (trim($settings->boxit_api_key) != '' || trim($settings->shopandcollect_api_key) != ''){
                 // turn on delivery service
-                $shopifyModule->uninstallCarrierServices($ShopifyAPI);
+                try{
+                    $shopifyModule->installCarrierServices($ShopifyAPI);
+                } catch (\Exception $e){
+                    \Yii::error('Carrier install error: '.$e->getMessage());
+                }
             }
 
             unset($ShopifyAPI);
