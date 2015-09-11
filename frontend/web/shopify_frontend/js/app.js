@@ -127,7 +127,11 @@
                 (function(){
                     try{
                         if (eval(condition) == true) {
-                            k();
+                            try {
+                                k();
+                            } catch (e){
+                                console.log(e);
+                            }
                         } else {
                             setTimeout(arguments.callee,10);
                         }
@@ -161,7 +165,7 @@
              * @returns {*}
              */
             getShopDomains : function(){
-
+                console.log(shopDomains);
                 if (shopDomains === null){
                     if (typeof jQuery != "undefined" && jQuery('#shop').length && jQuery('#shop').val() != document.location.hostname){
                         shopDomains.push(jQuery('#shop').val());

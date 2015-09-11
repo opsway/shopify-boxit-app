@@ -25,7 +25,11 @@ jQuery(function(){
         (function(){
             try{
                 if (eval(condition) == true) {
-                    k();
+                    try {
+                        k();
+                    } catch (e){
+                        console.log(e);
+                    }
                 } else {
                     setTimeout(arguments.callee,10);
                 }
