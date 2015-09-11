@@ -11,6 +11,9 @@
         var box_cookie = 'boxitsess';
         var box_cookie_tout = 100*24*60*60*1000;
 
+        // current shop domains
+        var shopDomains = null;
+
         /**
          * cookielibrary
          * @type {{setCookie: setCookie, getCookie: getCookie, deleteCookie: deleteCookie}}
@@ -150,6 +153,23 @@
             getExternalAppPath : function(){
 
                 return getBasePath().replace('https://', '');
+
+            },
+
+            /**
+             * method returns shop domains
+             * @returns {*}
+             */
+            getShopDomains : function(){
+
+                if (shopDomains === null){
+                    if (typeof jQuery != "undefined" && jQuery('#shop').length && jQuery('#shop').val() != document.location.hostname){
+                        shopDomains.push(jQuery('#shop').val());
+                    }
+                    shopDomains.push(document.location.hostname);
+                }
+
+                return shopDomains;
 
             }
 

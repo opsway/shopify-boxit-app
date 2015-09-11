@@ -95,6 +95,11 @@ class AppController extends ShopifyController
 
         $shop = preg_replace('#^https?://(.*)$#', '$1', $request->post('shop'));
 
+        $shops = explode(',', str_replace(' ', '', $shop));
+
+        // get only first domain, because we get it from 'shop' variable on the checkout page
+        $shop = $shops[0];
+
         $session = $request->post('session');
         $session_created = false;
 
@@ -127,6 +132,8 @@ class AppController extends ShopifyController
 
         $shop = preg_replace('#^https?://(.*)$#', '$1', $request->get('shop'));
 
+        $shops = explode(',', str_replace(' ', '', $shop));
+
         $session = $request->post('session');
         $session_created = false;
 
@@ -136,7 +143,13 @@ class AppController extends ShopifyController
             $session_created = true;
         }
 
-        $cart = Usercart::getByParams(['store_name' => $shop, 'session' => $session, 'is_complete' => 0]);
+        $cart = null;
+        foreach ($shops as $s){
+            $cart = Usercart::getByParams(['store_name' => $s, 'session' => $session, 'is_complete' => 0]);
+            if ($cart){
+                break;
+            }
+        }
 
         if ($cart){
             $data = array(
@@ -150,7 +163,14 @@ class AppController extends ShopifyController
         }
 
         // get info about possible APIs
-        $userSettings = Usersettings::getByParams(['store_name' => $shop]);
+        $userSettings = null;
+        foreach ($shops as $s){
+            $userSettings = Usersettings::getByParams(['store_name' => $s]);
+            if ($userSettings){
+                break;
+            }
+        }
+
         $data['api_exists'] =
         $data['app_settings'] =
             array();

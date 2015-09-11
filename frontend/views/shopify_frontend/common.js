@@ -91,7 +91,7 @@ jQuery(function(){
                 'phone' : jQuery('#mobile_prefix option:selected').val() + jQuery('.pickup_mobile').val(),
                 'locker_id' : jQuery('#pickup_location_id').val(),
                 'customer_id' : jQuery('#customer_id').val(),
-                'shop' : jQuery('#shop').val(),
+                'shop' : window.OwsBootstrap.getShopDomains().join(','),
                 'type'	: jQuery('.b-boxit-container input[type="radio"]:checked').val(),
                 'address' : address.trim(),
                 'session' : window.OwsBootstrap.getSessionValue()
@@ -171,11 +171,11 @@ jQuery(function(){
         // get info about api keys and cart data
         jQuery.ajax({
             'type' : 'POST',
-            'url'  : 'https://'+window.OwsBootstrap.getExternalAppPath()+'/index.php?r=app/cart&shop=' + jQuery('#shop').val(),
+            'url'  : 'https://'+window.OwsBootstrap.getExternalAppPath()+'/index.php?r=app/cart&shop=' + window.OwsBootstrap.getShopDomains().join(','),
             'dataType' : 'json',
             'crossDomain' : true,
             'data' : {
-                'shop' : jQuery('#shop').val(),
+                'shop' : window.OwsBootstrap.getShopDomains().join(','),
                 'session' : window.OwsBootstrap.getSessionValue()
             },
             'success' : function(json) {
