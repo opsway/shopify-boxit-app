@@ -90,7 +90,9 @@ class SiteController extends ShopifyController
 
             // make additional call, maybe we lost API key
             // For example when we try to install the app from App store (https://apps.shopify.com/boxit-connector).
-            if (!empty($userSettings) && ($is_access_token_valid = $shopifyModule->isAccessTokenValid($ShopifyAPI))) {
+            if (!empty($userSettings) &&
+                $ShopifyAPI->activateClient($get['shop'], $settings['api_key'], $userSettings['access_token']) &&
+                ($is_access_token_valid = $shopifyModule->isAccessTokenValid($ShopifyAPI))) {
 
                 $ShopifyAPI->activateClient($get['shop'], $settings['api_key'], $userSettings['access_token']);
 
