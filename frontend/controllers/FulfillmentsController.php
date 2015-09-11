@@ -88,7 +88,7 @@ class FulfillmentsController extends ShopifyController
                         }
 
                     } else {
-                        Yii::error('Fulfillment always sent. Order: '.$result->order_id);
+                        Yii::error('Fulfillment always sent or order not exists. Order: '.$data['order_id'].' on '.$ShopifyAPI->getRequestShop());
                     }
                 }
             }
