@@ -55,14 +55,16 @@ class BoxitController extends ShopifyController
 
                 foreach (\Yii::$app->params['shopify_app']['carrier_services'] as $app_service_name => $app_service_action ){
 
-                    $rates['rates'][] = array(
-                        'service_name'		=>	$app_service_name,
-                        'service_code'		=>	$app_service_action,
-                        'total_price'		=>	$userSettings[$app_service_action.'_carrier_cost']*100,
-                        'currency'			=>	$shop_data['currency'],
-                        'min_delivery_date'	=>	date('Y-m-d H:i:s O', $nextday),
-                        'max_delivery_date'	=>	date('Y-m-d H:i:s O', $nextday)
-                    );
+                    if (trim($userSettings[$app_service_action.'_api_key'] != '')){
+                        $rates['rates'][] = array(
+                            'service_name'		=>	$app_service_name,
+                            'service_code'		=>	$app_service_action,
+                            'total_price'		=>	$userSettings[$app_service_action.'_carrier_cost']*100,
+                            'currency'			=>	$shop_data['currency'],
+                            'min_delivery_date'	=>	date('Y-m-d H:i:s O', $nextday),
+                            'max_delivery_date'	=>	date('Y-m-d H:i:s O', $nextday)
+                        );
+                    }
 
                 }
 
