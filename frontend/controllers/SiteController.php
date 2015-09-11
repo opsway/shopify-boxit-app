@@ -90,7 +90,20 @@ class SiteController extends ShopifyController
 
             // make additional call, maybe we lost API key
             // For example when we try to install the app from App store (https://apps.shopify.com/boxit-connector).
-            if (empty($userSettings) && ($is_access_token_valid = $shopifyModule->isAccessTokenValid($ShopifyAPI))) {
+            if (!empty($userSettings) && ($is_access_token_valid = $shopifyModule->isAccessTokenValid($ShopifyAPI))) {
+
+                $ShopifyAPI->activateClient($get['shop'], $settings['api_key'], $userSettings['access_token']);
+
+                echo \Yii::$app->view->renderFile('@app/views/shopify_backend/settings.php', [
+                    'app_url' => (\Yii::$app->params['base_api_url'] ? \Yii::$app->params['base_api_url'] : 'https://apps.opsway.com/shopify/boxit/frontend/web'),
+                    'document_domain' => \Yii::$app->params['document.domain'],
+                    'store_settings' => $settings,
+                    'user_settings' => $userSettings,
+                    'is_templates_installed' => $shopifyModule->isTemplateInstalled($ShopifyAPI),
+                ]);
+
+            } else {
+
                 // Get the permission url.
                 $permission_url = $ShopifyAPI->getAuthorizationUrl(
                     $shop,
@@ -102,17 +115,7 @@ class SiteController extends ShopifyController
                 // Redirect to the permission url.
                 header('Location: ' . $permission_url);
                 exit;
-            } else {
 
-                $ShopifyAPI->activateClient($get['shop'], $settings['api_key'], $userSettings['access_token']);
-
-                echo \Yii::$app->view->renderFile('@app/views/shopify_backend/settings.php', [
-                    'app_url' => (\Yii::$app->params['base_api_url'] ? \Yii::$app->params['base_api_url'] : 'https://apps.opsway.com/shopify/boxit/frontend/web'),
-                    'document_domain' => \Yii::$app->params['document.domain'],
-                    'store_settings' => $settings,
-                    'user_settings' => $userSettings,
-                    'is_templates_installed' => $shopifyModule->isTemplateInstalled($ShopifyAPI),
-                ]);
             }
 
         }
