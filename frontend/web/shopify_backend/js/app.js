@@ -121,7 +121,7 @@
                             $('#alertUninstalled').hide(100);
                             $('#boxit_api_key, #shopandcollect_api_key, #boxit_carrier_cost, #shopandcollect_carrier_cost, #btnSubmitSettings, #hooks_update, #checkout_button_id').removeClass('disabled').removeProp('disabled');
 
-                            if ($.trim($('boxit_api_key').val()) == '' && $.trim($('shopandcollect_api_key').val()) == ''){
+                            if ($.trim($('#boxit_api_key').val()) == '' && $.trim($('#shopandcollect_api_key').val()) == ''){
                                 $('#alertNoAPIKeys').show(100);
                             } else {
                                 $('#alertNoAPIKeys').hide(100);
@@ -177,7 +177,7 @@
                     $(that).removeClass('disabled');
                     $(that).text($(that).data('old_text'));
 
-                    if ($.trim($('boxit_api_key').val()) == '' && $.trim($('shopandcollect_api_key').val()) == ''){
+                    if ($.trim($('#boxit_api_key').val()) == '' && $.trim($('#shopandcollect_api_key').val()) == ''){
                         $('#alertNoAPIKeys').show(100);
                     } else {
                         $('#alertNoAPIKeys').hide(100);
