@@ -165,8 +165,9 @@
              * @returns {*}
              */
             getShopDomains : function(){
-                console.log(shopDomains);
+                
                 if (shopDomains === null){
+                    shopDomains = [];
                     if (typeof jQuery != "undefined" && jQuery('#shop').length && jQuery('#shop').val() != document.location.hostname){
                         shopDomains.push(jQuery('#shop').val());
                     }
