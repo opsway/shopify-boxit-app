@@ -75,6 +75,7 @@ class SiteController extends ShopifyController
                 $userSettings->access_token = $access_token;
                 $userSettings->store_name = $shop;
                 $userSettings->old_cart = $old_cart;
+                $userSettings->is_show_on_checkout = 1;
                 $userSettings->access_token_hash = md5($access_token . $shop . \Yii::$app->params['store_hash_salt']);
             }
             $userSettings->save();
@@ -361,6 +362,8 @@ class SiteController extends ShopifyController
                     $settings->shopandcollect_carrier_cost = $input['value'];
                 if($input['name'] == 'checkout_button_id')
                     $settings->checkout_button_id = $input['value'];
+                if($input['name'] == 'checkout_button_id')
+                    $settings->is_show_on_checkout = $input['is_show_on_checkout'];
 
             }
             $settings->save();

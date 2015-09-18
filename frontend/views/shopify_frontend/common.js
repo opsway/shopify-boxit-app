@@ -4,6 +4,9 @@ jQuery(function(){
     var isAPIExists = null;
     var appSettings = null;
 
+    // special app identifier
+    var appId = 'BoxIt';
+
     /**
      * method get value from loaded application settings (if no value default_value returned)
      * @param setting
@@ -167,107 +170,117 @@ jQuery(function(){
 
         });
 
-        // temporary block checkout button until we will get info about API keys and oldcart data
-        jQuery('#'+getAppSetting('checkout_button_id', 'checkout')).attr('disabled',true);
-        // show preloader
-        jQuery('.b-boxit-preloader').show(50);
+        // get hook on pre get cart
+        var hook = window.OwsBootstrap.getShopHooks(appId, 'beforeGetSavedUserCart', {'store' : window.OwsBootstrap.getShopDomains().join(','), 'session' : window.OwsBootstrap.getSessionValue()});
+        var hookResult = null;
+        if (typeof hook == 'function'){
+            hookResult = hook({'store' : window.OwsBootstrap.getShopDomains().join(','), 'session' : window.OwsBootstrap.getSessionValue()});
+        }
 
         // get info about api keys and cart data
-        jQuery.ajax({
-            'type' : 'POST',
-            'url'  : 'https://'+window.OwsBootstrap.getExternalAppPath()+'/index.php?r=app/cart&shop=' + window.OwsBootstrap.getShopDomains().join(','),
-            'dataType' : 'json',
-            'crossDomain' : true,
-            'data' : {
-                'shop' : window.OwsBootstrap.getShopDomains().join(','),
-                'session' : window.OwsBootstrap.getSessionValue()
-            },
-            'success' : function(json) {
-                //console.info(json.locker_id > 0);
-                //console.info(json.phone.length > 0);
-                //console.info(json);
+        if (!hook || (hook && hookResult)){
 
-                // hide preloader
-                jQuery('.b-boxit-preloader').stop().hide(50);
+            // temporary block checkout button until we will get info about API keys and oldcart data
+            jQuery('#'+getAppSetting('checkout_button_id', 'checkout')).attr('disabled',true);
+            // show preloader
+            jQuery('.b-boxit-preloader').show(50);
 
-                // set session value
-                if (json && json.session){
-                    window.OwsBootstrap.setSessionValue(json.session);
-                }
+            jQuery.ajax({
+                'type' : 'POST',
+                'url'  : 'https://'+window.OwsBootstrap.getExternalAppPath()+'/index.php?r=app/cart&shop=' + window.OwsBootstrap.getShopDomains().join(','),
+                'dataType' : 'json',
+                'crossDomain' : true,
+                'data' : {
+                    'shop' : window.OwsBootstrap.getShopDomains().join(','),
+                    'session' : window.OwsBootstrap.getSessionValue()
+                },
+                'success' : function(json) {
+                    //console.info(json.locker_id > 0);
+                    //console.info(json.phone.length > 0);
+                    //console.info(json);
 
-                // get app settings
-                if (json.app_settings){
-                    appSettings = json.app_settings;
-                }
+                    // hide preloader
+                    jQuery('.b-boxit-preloader').stop().hide(50);
 
-                // check if api keys exists
-                if (json.api_exists){
-                    var found = false;
-                    for (var key in json.api_exists){
-                        if (json.api_exists[key]){
-                            found = true;
-                        } else {
-                            jQuery('#boxit-delivery-radio-'+key).hide();
-                        }
+                    // set session value
+                    if (json && json.session){
+                        window.OwsBootstrap.setSessionValue(json.session);
                     }
 
-                    // oops - any API keys - then hide whole block
-                    if (!found){
+                    // get app settings
+                    if (json.app_settings){
+                        appSettings = json.app_settings;
+                    }
+
+                    // check if api keys exists
+                    if (json.api_exists && (!appSettings || (appSettings && appSettings.is_show_on_checkout == '1'))){
+                        var found = false;
+                        for (var key in json.api_exists){
+                            if (json.api_exists[key]){
+                                found = true;
+                            } else {
+                                jQuery('#boxit-delivery-radio-'+key).hide();
+                            }
+                        }
+
+                        // oops - any API keys - then hide whole block
+                        if (!found){
+                            $('.b-boxit-container').hide();
+                            isAPIExists = false;
+                        } else {
+                            isAPIExists = json.api_exists;
+                            $('.b-boxit-container').show(50);
+                        }
+
+                    } else {
+                        // if any error or show on checkout page turned off - then we cannot show block to the user
                         $('.b-boxit-container').hide();
                         isAPIExists = false;
-                    } else {
-                        isAPIExists = json.api_exists;
-                        $('.b-boxit-container').show(50);
                     }
 
-                } else {
-                    // if any error - then we cannot show block to the user
-                    $('.b-boxit-container').hide();
-                    isAPIExists = false;
-                }
+                    // unblock checkout button
+                    jQuery('#'+getAppSetting('checkout_button_id', 'checkout')).removeAttr('disabled');
 
-                // unblock checkout button
-                jQuery('#'+getAppSetting('checkout_button_id', 'checkout')).removeAttr('disabled');
-
-                if (isAPIExists){
-                    if(json.locker_id > 0 && validatePhone())
-                    {
-                        if(json.type != 'other')
-                            jQuery('.b-boxit-container .inputField').show();
-                        $('#mobile_prefix option:contains("' + json.phone.substring(0,3) + '")').attr('selected',true);
-                    }
-                    else
-                    {
-                        jQuery('#pickup_location_id').val(json.locker_id);
-
-                        if (json.phone){
-                            jQuery('.b-boxit-container .pickup_mobile').val(substring(json.phone,3,10));
+                    if (isAPIExists){
+                        if(json.locker_id > 0 && validatePhone())
+                        {
+                            if(json.type != 'other')
+                                jQuery('.b-boxit-container .inputField').show();
                             $('#mobile_prefix option:contains("' + json.phone.substring(0,3) + '")').attr('selected',true);
                         }
-
-                        if (json.type && isAPIExists[json.type])
-                            $('input').filter(function() { return this.value == json.type }).attr('checked',true);
-
-                        if(json.type != 'other')
+                        else
                         {
-                            jQuery('.b-boxit-container .inputField').show();
-                        }
+                            jQuery('#pickup_location_id').val(json.locker_id);
 
-                        applyValidation(validateLockerId() && validatePhone());
-                    }
+                            if (json.phone){
+                                jQuery('.b-boxit-container .pickup_mobile').val(substring(json.phone,3,10));
+                                $('#mobile_prefix option:contains("' + json.phone.substring(0,3) + '")').attr('selected',true);
+                            }
 
-                    // set timeout on change locker_id
-                    setInterval(function(){
-                        if(jQuery('.b-boxit-container .method input:checked').val() == 'other')
-                        {
-                            applyValidation(true);
-                        } else {
+                            if (json.type && isAPIExists[json.type])
+                                $('input').filter(function() { return this.value == json.type }).attr('checked',true);
+
+                            if(json.type != 'other')
+                            {
+                                jQuery('.b-boxit-container .inputField').show();
+                            }
+
                             applyValidation(validateLockerId() && validatePhone());
                         }
-                    }, 500);
+
+                        // set timeout on change locker_id
+                        setInterval(function(){
+                            if(jQuery('.b-boxit-container .method input:checked').val() == 'other')
+                            {
+                                applyValidation(true);
+                            } else {
+                                applyValidation(validateLockerId() && validatePhone());
+                            }
+                        }, 500);
+                    }
                 }
-            }
-        });
+            });
+        }
 
         /*if(jQuery('.b-boxit-container .method input:checked').val() == 'other')
         {

@@ -118,6 +118,12 @@
                 <div class="panel-body">
 
                     <div class="form-group">
+                        <label for="is_show_on_checkout_all">Show location select dialog on checkout page (then, dialog on the thankyou page will be shown only if user not input right data on the checkout page)</label>
+                        <label for="is_show_on_checkout_1"><input type="radio" class="form-control" name="is_show_on_checkout" id="is_show_on_checkout_1" value="1" <?=($user_settings['is_show_on_checkout'] == 1) ? 'checked="checked"' : ''?>>Yes</label>
+                        <label for="is_show_on_checkout_0"><input type="radio" class="form-control" name="is_show_on_checkout" id="is_show_on_checkout_0" value="0" <?=($user_settings['is_show_on_checkout'] == 0) ? 'checked="checked"' : ''?>>No</label>
+                    </div>
+
+                    <div class="form-group">
                         <label for="boxit_api_key">Checkout button ID (if you are using non-standard checkout template you need to define button ID to handle it on delivery change). Default value is "checkout"</label>
                         <input type="text" class="form-control" name="checkout_button_id" id="checkout_button_id" placeholder="Example: checkout" value="<?=(empty($user_settings['checkout_button_id']) ? "" : htmlspecialchars($user_settings['checkout_button_id']))?>">
                     </div>

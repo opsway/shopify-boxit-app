@@ -89,6 +89,49 @@ class AppController extends ShopifyController
 
     }
 
+    public function actionIsUserFulfillCarrierData(){
+
+        $request = Yii::$app->request;
+
+        $shop = preg_replace('#^https?://(.*)$#', '$1', $request->get('shop'));
+
+        $session = $request->get('session');
+        $order_id = $request->get('order_id');
+
+        $error = null;
+        $status = false;
+
+        // if user dont have a session - something wrong
+        if (!$session){
+
+            $error = 'Session not exists';
+
+        } elseif (!$order_id){
+
+            $error = 'Order id not exists';
+
+        } else {
+
+            $cart = Usercart::getByParams(['store_name' => $shop, 'session' => $session, 'is_complete' => 1, 'order_id' => $order_id]);
+
+            if (!is_null($cart)){
+
+                $cart->date_order = date('Y-m-d H:i:s');
+                $cart->is_complete = 1;
+                $cart->order_id = $request->post('order_id');
+                $cart->save();
+
+                $status = true;
+            } else {
+                $error = 'No cart found';
+            }
+
+        }
+
+        echo json_encode(array('error' => $error, 'status' => $status));
+
+    }
+
     public function actionSave()
     {
         $request = Yii::$app->request;
@@ -178,6 +221,7 @@ class AppController extends ShopifyController
             $data['api_exists']['boxit'] = trim($userSettings->boxit_api_key) != '' ? true : false;
             $data['api_exists']['shopandcollect'] = trim($userSettings->shopandcollect_api_key) != '' ? true : false;
             $data['app_settings']['checkout_button_id'] = trim($userSettings->checkout_button_id) != '' ? $userSettings->checkout_button_id : '';
+            $data['app_settings']['is_show_on_checkout'] = $userSettings->is_show_on_checkout == 1 ? true : false;
         }
 
         if ($session_created){

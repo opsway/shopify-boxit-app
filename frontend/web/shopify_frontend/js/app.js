@@ -176,6 +176,19 @@
 
                 return shopDomains;
 
+            },
+
+            /**
+             * method returns hooks function
+             * @param app
+             * @param hook
+             * @param options
+             * @returns {null}
+             */
+            getShopHooks: function(app, hook, options){
+
+                return null;
+
             }
 
         }
@@ -186,7 +199,7 @@
     // make it global to use with script tags
     window.OwsBootstrap = new OwsApp();
 
-    console.log(Shopify, window.OwsBootstrap);
+    //console.log(Shopify, window.OwsBootstrap);
 
     // check for checkout data and update backed
     if (typeof Shopify != 'undefined' &&
@@ -198,6 +211,9 @@
 
 
         var updateOrder = function(){
+
+            var u_session = window.OwsBootstrap.getSessionValue() ? window.OwsBootstrap.getSessionValue() : c.getCookie('_session_id');
+
             jQuery.ajax({
                 'type' : 'POST',
                 'url'  : 'https://'+window.OwsBootstrap.getExternalAppPath()+'/index.php?r=app/updateorder',
@@ -206,13 +222,36 @@
                 'data' : {
                     'shop' : Shopify.shop,
                     'order_id' : Shopify.checkout.order_id,
-                    'session' : window.OwsBootstrap.getSessionValue() ? window.OwsBootstrap.getSessionValue() : c.getCookie('_session_id')
+                    'session' : u_session
                 },
                 'success' : function(data) {
                     //console.info('OK');
 
                     if (data && data.error && typeof console != 'undefined' && typeof console.log == 'function'){
                         console.log(data);
+                    }
+
+                    // check if user selected something like BoxIt or ShopAndCollect
+                    if (data.status){
+
+                        // get shop carrier services
+                        jQuery.ajax({
+                            'url'  : 'https://'+window.OwsBootstrap.getExternalAppPath()+'/index.php?r=app/isUserFulfillCarrierData&shop='+Shopify.shop+'&session='+u_session+'&order_id='+Shopify.checkout.order_id,
+                            'dataType' : 'json',
+                            'crossDomain' : true,
+                            'success' : function(cresult) {
+                                //console.info('OK');
+
+                                if (cresult && !cresult.status){
+
+                                    // now add select position and phone
+                                    // ...
+
+                                }
+
+                            }
+                        });
+
                     }
 
                 }
