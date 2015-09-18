@@ -362,7 +362,7 @@ class SiteController extends ShopifyController
                     $settings->shopandcollect_carrier_cost = $input['value'];
                 if($input['name'] == 'checkout_button_id')
                     $settings->checkout_button_id = $input['value'];
-                if($input['name'] == 'checkout_button_id')
+                if($input['name'] == 'is_show_on_checkout')
                     $settings->is_show_on_checkout = $input['is_show_on_checkout'];
 
             }
