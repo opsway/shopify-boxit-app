@@ -119,8 +119,10 @@
 
                     <div class="form-group">
                         <label for="is_show_on_checkout_all">Show location select dialog on checkout page (then, dialog on the thankyou page will be shown only if user not input right data on the checkout page)</label>
-                        <label for="is_show_on_checkout_1"><input type="radio" class="form-control" name="is_show_on_checkout" id="is_show_on_checkout_1" value="1" <?=($user_settings['is_show_on_checkout'] == 1) ? 'checked="checked"' : ''?>>Yes</label>
-                        <label for="is_show_on_checkout_0"><input type="radio" class="form-control" name="is_show_on_checkout" id="is_show_on_checkout_0" value="0" <?=($user_settings['is_show_on_checkout'] == 0) ? 'checked="checked"' : ''?>>No</label>
+                        <div class="radios-group">
+                            <label for="is_show_on_checkout_1"><input type="radio" class="form-control" name="is_show_on_checkout" id="is_show_on_checkout_1" value="1" <?=($user_settings['is_show_on_checkout'] == 1) ? 'checked="checked"' : ''?>>Yes</label>
+                            <label for="is_show_on_checkout_0"><input type="radio" class="form-control" name="is_show_on_checkout" id="is_show_on_checkout_0" value="0" <?=($user_settings['is_show_on_checkout'] == 0) ? 'checked="checked"' : ''?>>No</label>
+                        </div>
                     </div>
 
                     <div class="form-group">

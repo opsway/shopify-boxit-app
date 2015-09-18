@@ -704,6 +704,24 @@ SWITCH STYLING
     margin-left: 2px;
 }
 
+/*?=Radio button groups
+----------------------------------------*/
+.radios-group {
+    display: block;
+}
+
+    .radios-group label{
+        display: inline-block;
+        margin-right: 15px;
+    }
+
+        .radios-group label .form-control{
+            display: inline;
+            width: auto;
+            height: auto;
+            margin-right: 5px;
+        }
+
 /*----------------------------------------
 SMALL BROWSER FIXES
 ----------------------------------------*/
