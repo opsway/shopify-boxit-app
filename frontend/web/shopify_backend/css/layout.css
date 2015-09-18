@@ -599,6 +599,12 @@ CAROUSEL
     float: none;
     margin: 0 0 0 10px;
 }
+
+.section-header .btn.btn-shopify {
+    margin-top: 0px;
+    margin-bottom: 20px;
+}
+
 /*----------------------------------------
 SWITCH STYLING
 ----------------------------------------*/

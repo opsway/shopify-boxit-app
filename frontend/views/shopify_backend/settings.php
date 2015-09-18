@@ -136,6 +136,10 @@
 
         </form>
 
+        <div class="section-header clearfix">
+            <button id="btnSubmitSettings2" class="btn btn-shopify green save"><i class="glyphicon glyphicon-ok"></i> Save</button>
+        </div>
+
         <div class="alert alert-warning" role="alert">
             <strong>Warning!</strong> Before uninstalling app from the apps list - press the "Uninstall app" button below. Then the garbage from the App will be removed correctly.
         </div>
