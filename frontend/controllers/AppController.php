@@ -54,6 +54,11 @@ class AppController extends ShopifyController
 
         $session = $request->post('session');
         $order_id = $request->post('order_id');
+        $type_title = $request->post('type_title');
+        $type = $request->post('type');
+        $phone = $request->post('phone');
+        $locker_id = $request->post('locker_id');
+        $address = $request->post('address');
 
         $error = null;
         $status = false;
@@ -71,21 +76,54 @@ class AppController extends ShopifyController
 
             $cart = Usercart::getByParams(['store_name' => $shop, 'session' => $session, 'is_complete' => 0]);
 
-            if (!is_null($cart)){
+            if (is_null($cart)){
 
-                $cart->date_order = date('Y-m-d H:i:s');
-                $cart->is_complete = 1;
-                $cart->order_id = $request->post('order_id');
-                $cart->save();
+                $cart = new Usercart();
+                $cart->session = $session;
+                $cart->store_name = $shop;
 
-                $status = true;
-            } else {
-                $error = 'No cart found';
             }
+
+            $cart->date_order = date('Y-m-d H:i:s');
+            $cart->is_complete = 1;
+            $cart->order_id = $request->post('order_id');
+
+            // update delivery type
+            if ($type_title && isset(\Yii::$app->params['shopify_app']['carrier_services'][$type_title])){
+                $cart->type = \Yii::$app->params['shopify_app']['carrier_services'][$type_title];
+            } elseif ($type){
+                $reverse = array_flip(\Yii::$app->params['shopify_app']['carrier_services']);
+
+                if (isset($reverse[$type])){
+                    $cart->type = $reverse[$type];
+                }
+            }
+
+            if ($phone){
+                $cart->phone = $phone;
+            }
+
+            if ($locker_id){
+                $cart->locker_id = $locker_id;
+            }
+
+            if ($address){
+                $cart->address = $address;
+            }
+
+            $cart->save();
+
+            $status = true;
 
         }
 
         echo json_encode(array('error' => $error, 'status' => $status));
+
+    }
+
+    public function actionUitemplate(){
+
+        return \Yii::$app->view->renderFile('@app/views/shopify_frontend/thankyoupage.boxit.php');
 
     }
 
@@ -178,6 +216,9 @@ class AppController extends ShopifyController
         $shops = explode(',', str_replace(' ', '', $shop));
 
         $session = $request->post('session');
+
+        $order_id = $request->post('order_id');
+
         $session_created = false;
 
         if (!$session){
@@ -187,19 +228,36 @@ class AppController extends ShopifyController
         }
 
         $cart = null;
-        foreach ($shops as $s){
-            $cart = Usercart::getByParams(['store_name' => $s, 'session' => $session, 'is_complete' => 0]);
-            if ($cart){
-                break;
+
+        // if we have order id - check if this order is completed
+        if ($order_id){
+            foreach ($shops as $s){
+                $cart = Usercart::getByParams(['store_name' => $s, 'order_id' => $order_id, 'is_complete' => 1]);
+                if ($cart){
+                    break;
+                }
+            }
+        }
+
+        // second turn - try to find not complete cart
+        if (!$cart){
+            foreach ($shops as $s){
+                $cart = Usercart::getByParams(['store_name' => $s, 'session' => $session, 'is_complete' => 0]);
+                if ($cart){
+                    break;
+                }
             }
         }
 
         if ($cart){
+            $reverse = array_flip(\Yii::$app->params['shopify_app']['carrier_services']);
             $data = array(
                 'locker_id' => $cart->locker_id,
                 //'email' => $cart->email,
                 'phone' => $cart->phone,
                 'type' => $cart->type,
+                'is_complete' => $cart->is_complete,
+                'type_title' => $cart->type && isset($reverse[$cart->type]) ? $reverse[$cart->type] : null,
             );
         } else {
             $data = array();
@@ -222,6 +280,7 @@ class AppController extends ShopifyController
             $data['api_exists']['shopandcollect'] = trim($userSettings->shopandcollect_api_key) != '' ? true : false;
             $data['app_settings']['checkout_button_id'] = trim($userSettings->checkout_button_id) != '' ? $userSettings->checkout_button_id : '';
             $data['app_settings']['is_show_on_checkout'] = $userSettings->is_show_on_checkout == 1 ? true : false;
+            $data['app_settings']['carrier_services'] = \Yii::$app->params['shopify_app']['carrier_services'];
         }
 
         if ($session_created){

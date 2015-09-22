@@ -302,7 +302,10 @@ class ShopifyApp extends \yii\base\Component
         /*
          * push main boxit template
          */
-        $content = \Yii::$app->view->renderFile('@app/views/shopify_frontend/cart.php', ['test' => 'test']);
+        $content = \Yii::$app->view->renderFile('@app/views/shopify_frontend/cart.php');
+
+        // replace path to the external items
+        $content = str_replace('[[BASE_API_URL]]', \Yii::$app->params['base_api_url'], $content);
 
         $ShopifyAPI->updateThemeElement($result[0]['id'], [
             'asset'	=>	[

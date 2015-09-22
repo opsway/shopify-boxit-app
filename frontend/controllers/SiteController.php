@@ -16,8 +16,6 @@ class SiteController extends ShopifyController
      */
     public function actionIndex()
     {
-        //\Yii::$app->view->renderFile('@app/views/shopify_frontend/cart.php', ['test' => 'test']);
-        //throw new \Exception('You are not authorized');
         echo 'You are not authorized';
     }
 

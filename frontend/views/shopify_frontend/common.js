@@ -2,26 +2,9 @@ jQuery(function(){
 
     // flag determines, if any of API exists
     var isAPIExists = null;
-    var appSettings = null;
 
     // special app identifier
     var appId = 'BoxIt';
-
-    /**
-     * method get value from loaded application settings (if no value default_value returned)
-     * @param setting
-     * @param default_value
-     * @returns {*}
-     */
-    var getAppSetting = function(setting, default_value){
-
-        if (appSettings && typeof appSettings[setting] != 'undefined' && appSettings[setting] != ''){
-            return appSettings[setting];
-        } else {
-            return default_value;
-        }
-
-    };
 
     var syncEvent = function(k, condition){
 
@@ -40,47 +23,6 @@ jQuery(function(){
                 setTimeout(arguments.callee,10);
             }}
             )();
-    };
-
-    /**
-     * validate locker id value
-     * @returns {boolean}
-     */
-    var validateLockerId = function(){
-
-        var selected = jQuery('.b-boxit-container input[type="radio"]:checked').val();
-        if (selected != '' && selected != 'other')
-        {
-            return parseInt(jQuery('#pickup_location_id').val()) > 0;
-        } else {
-            return true;
-        }
-
-    };
-
-    /**
-     * validate phone number
-     * @returns {*|Array|{index: number, input: string}|boolean}
-     */
-    var validatePhone = function ()
-    {
-        var regexpNum = /\d+/;
-        var regexChar = /[a-zA-Z]/;
-        var phone = jQuery('.pickup_mobile').val();
-        return phone.match(regexpNum) && !phone.match(regexChar) && phone.length == 7;
-    };
-
-    var substring = function (text,start,end)
-    {
-        var str = '';
-        if (text != null){
-            for(i = start; i != end; i = i + 1)
-            {
-                if(text[i] != undefined)
-                    str += text[i];
-            }
-        }
-        return str;
     };
 
     var saveData = function ()
@@ -114,26 +56,6 @@ jQuery(function(){
         });
     }
 
-    /**
-     * method apply validation on delivery form
-     */
-    var applyValidation = function(is_valid){
-        if(is_valid)
-        {
-            jQuery('#'+getAppSetting('checkout_button_id', 'checkout')).attr('disabled',false);
-            jQuery('.b-boxit-container .pickup_mobile').removeClass('error')
-                .addClass('success');
-            jQuery('#phone-message').hide();
-        } else {
-            jQuery('#'+getAppSetting('checkout_button_id', 'checkout')).attr('disabled',true);
-            jQuery('.b-boxit-container .pickup_mobile').attr('id','inputWarning2')
-                .removeClass('success')
-                .addClass('error');
-            jQuery('#phone-message').show();
-        }
-
-    };
-
     // waiting for main app core initialization
     syncEvent(function(){
 
@@ -145,28 +67,28 @@ jQuery(function(){
             if(jQuery('.b-boxit-container .method input:checked').val() == 'other')
             {
                 jQuery('.b-boxit-container .inputField').hide();
-                applyValidation(true);
+                window.BoxitApp.applyValidation(true);
             } else {
                 jQuery('.b-boxit-container .inputField').show();
-                applyValidation(validateLockerId() && validatePhone());
+                window.BoxitApp.applyValidation(window.BoxitApp.validateLockerId(jQuery('.b-boxit-container input[type="radio"]:checked').val()) && window.BoxitApp.validatePhone(jQuery('.pickup_mobile').val()));
             }
         });
 
         jQuery('.b-boxit-container .method input').change(function(){
             if(jQuery(this).val() == 'other')
             {
-                jQuery('#'+getAppSetting('checkout_button_id', 'checkout')).attr('disabled',false);
+                jQuery('#'+window.BoxitApp.getAppSetting('checkout_button_id', 'checkout')).attr('disabled',false);
                 jQuery('.b-boxit-container .inputField').hide();
             } else {
-                //jQuery('#'+getAppSetting('checkout_button_id', 'checkout')).attr('disabled',true);
+                //jQuery('#'+window.BoxitApp.getAppSetting('checkout_button_id', 'checkout')).attr('disabled',true);
                 jQuery('.b-boxit-container .inputField').show();
-                applyValidation(validateLockerId() && validatePhone());
+                window.BoxitApp.applyValidation(window.BoxitApp.validateLockerId(jQuery('.b-boxit-container input[type="radio"]:checked').val()) && window.BoxitApp.validatePhone(jQuery('.pickup_mobile').val()));
             }
         });
 
         jQuery('.b-boxit-container .pickup_mobile').on('blur keyup', function(){
             saveData();
-            applyValidation(validateLockerId() && validatePhone());
+            window.BoxitApp.applyValidation(window.BoxitApp.validateLockerId(jQuery('.b-boxit-container input[type="radio"]:checked').val()) && window.BoxitApp.validatePhone(jQuery('.pickup_mobile').val()));
 
         });
 
@@ -181,7 +103,7 @@ jQuery(function(){
         if (!hook || (hook && hookResult)){
 
             // temporary block checkout button until we will get info about API keys and oldcart data
-            jQuery('#'+getAppSetting('checkout_button_id', 'checkout')).attr('disabled',true);
+            jQuery('#'+window.BoxitApp.getAppSetting('checkout_button_id', 'checkout')).attr('disabled',true);
             // show preloader
             jQuery('.b-boxit-preloader').show(50);
 
@@ -209,11 +131,11 @@ jQuery(function(){
 
                     // get app settings
                     if (json.app_settings){
-                        appSettings = json.app_settings;
+                        window.BoxitApp.setAppSettings(json.app_settings);
                     }
 
                     // check if api keys exists
-                    if (json.api_exists && (!appSettings || (appSettings && appSettings.is_show_on_checkout == '1'))){
+                    if (json.api_exists && window.BoxitApp.getAppSetting('is_show_on_checkout', '1') == '1'){
                         var found = false;
                         for (var key in json.api_exists){
                             if (json.api_exists[key]){
@@ -239,10 +161,10 @@ jQuery(function(){
                     }
 
                     // unblock checkout button
-                    jQuery('#'+getAppSetting('checkout_button_id', 'checkout')).removeAttr('disabled');
+                    jQuery('#'+window.BoxitApp.getAppSetting('checkout_button_id', 'checkout')).removeAttr('disabled');
 
                     if (isAPIExists){
-                        if(json.locker_id > 0 && validatePhone())
+                        if(json.locker_id > 0 && window.BoxitApp.validatePhone(jQuery('.pickup_mobile').val()))
                         {
                             if(json.type != 'other')
                                 jQuery('.b-boxit-container .inputField').show();
@@ -253,7 +175,7 @@ jQuery(function(){
                             jQuery('#pickup_location_id').val(json.locker_id);
 
                             if (json.phone){
-                                jQuery('.b-boxit-container .pickup_mobile').val(substring(json.phone,3,10));
+                                jQuery('.b-boxit-container .pickup_mobile').val(window.BoxitApp.substring(json.phone,3,10));
                                 $('#mobile_prefix option:contains("' + json.phone.substring(0,3) + '")').attr('selected',true);
                             }
 
@@ -265,16 +187,16 @@ jQuery(function(){
                                 jQuery('.b-boxit-container .inputField').show();
                             }
 
-                            applyValidation(validateLockerId() && validatePhone());
+                            window.BoxitApp.applyValidation(window.BoxitApp.validateLockerId(jQuery('.b-boxit-container input[type="radio"]:checked').val()) && window.BoxitApp.validatePhone(jQuery('.pickup_mobile').val()));
                         }
 
                         // set timeout on change locker_id
                         setInterval(function(){
                             if(jQuery('.b-boxit-container .method input:checked').val() == 'other')
                             {
-                                applyValidation(true);
+                                window.BoxitApp.applyValidation(true);
                             } else {
-                                applyValidation(validateLockerId() && validatePhone());
+                                window.BoxitApp.applyValidation(window.BoxitApp.validateLockerId(jQuery('.b-boxit-container input[type="radio"]:checked').val()) && window.BoxitApp.validatePhone(jQuery('.pickup_mobile').val()));
                             }
                         }, 500);
                     }
@@ -284,13 +206,13 @@ jQuery(function(){
 
         /*if(jQuery('.b-boxit-container .method input:checked').val() == 'other')
         {
-            jQuery('#'+getAppSetting('checkout_button_id', 'checkout')).attr('disabled',false);
+            jQuery('#'+window.BoxitApp.getAppSetting('checkout_button_id', 'checkout')).attr('disabled',false);
         } else {
-            console.info(validatePhone());
-            applyValidation(validatePhone());
+            console.info(window.BoxitApp.validatePhone(jQuery('.pickup_mobile').val()));
+         window.BoxitApp.applyValidation(window.BoxitApp.validatePhone(jQuery('.pickup_mobile').val()));
         }*/
 
-    }, 'typeof window.OwsBootstrap != "undefined"');
+    }, 'typeof window.OwsBootstrap != "undefined" && typeof window.BoxitApp != "undefined"');
 
     if (typeof console != 'undefined' && typeof console.log == 'function')
         console.log('start search OwsBootstrap...');

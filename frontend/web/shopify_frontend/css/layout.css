@@ -1,0 +1,165 @@
+/**
+ * BoxIt Frontend Layout
+ * @author goshi
+ */
+.b-boxit-container {
+    margin: 20px 0;
+}
+
+    .b-boxit-container h3.title{
+        font-size: 20px;
+    }
+
+    .b-boxit-container .method {
+        display: block;
+        margin-left: 14px;
+        margin-bottom: 20px;
+    }
+
+    .b-boxit-container .method span {
+        margin: 15px;
+        font-weight: bold;
+        font-size: 12px;
+        color: #0993a8;
+    }
+
+    .b-boxit-container .method a {
+        cursor: pointer;
+        margin-left: 26px;
+        color: #999;
+        font-size: 12px;
+    }
+
+    .b-boxit-container .inputField{
+        display: inline;
+        margin-left: 14px;
+    }
+
+    .b-boxit-container input[type=radio]{
+        -webkit-appearance: radio;
+    }
+
+    .b-boxit-container input[type=checkbox]{
+        -webkit-appearance: checkbox;
+    }
+
+    .b-boxit-preloader {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 8px 20px;
+        border-radius: 4px;
+        -webkit-border-radius: 4px;
+        -moz-border-radius: 4px;
+        border: 1px solid #bce8f1;
+        color: #31708f;
+        background-color: #d9edf7;
+    }
+
+    .b-boxit-container .h{
+        display: none;
+    }
+
+    .b-boxit-container .button-container{
+        padding: 20px 0;
+        text-align: center;
+    }
+
+        .b-boxit-container .button-container .btn{
+
+        }
+
+/*?=Popup styles
+--------------------------------*/
+.bg-boxit-popup-bg {
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 0;
+    opacity: 0.3;
+    -moz-opacity: 0.3;
+    background: #000;
+}
+
+    .b-boxit-strobber {
+        position: absolute;
+        z-index: 10001;
+        top: 100px;
+        left: 50%;
+        margin-left: -100px;
+        width: 200px;
+        text-align: center;
+    }
+
+        .b-boxit-strobber-inner {
+            padding-bottom: 30px;
+            text-align: center;
+            background: url('../img/loader.gif?1') center bottom no-repeat;
+        }
+
+    .b-boxit-popup {
+        position: absolute;
+        z-index: 10001;
+        top: 100px;
+        left: 50%;
+        margin-left: -150px;
+        width: 300px;
+        background: #fff;
+        border-radius: 20px;
+        -moz-border-radius: 20px;
+    }
+
+        .b-boxit-popup .b-boxit-popup-inner{
+            padding: 30px;
+        }
+
+        .b-boxit-popup .b-boxit-close{
+            display: none;
+            position: absolute;
+            z-index: 100;
+            right: 5px;
+            top: 5px;
+            color: #999;
+            font-family: 'Courier New', Arial;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .b-boxit-popup .pickup_mobile{
+            height: 29px;
+            border: 1px solid #ddd;
+            padding: 3px 5px;
+            margin-bottom: 5px;
+        }
+
+        .b-boxit-popup .b-boxit-container .button-container .btn{
+            padding: 10px 24px;
+        }
+
+        .b-boxit-popup .b-boxit-container .button-container .disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .b-boxit-popup #mobile_prefix{
+            border: 1px solid #ccc;
+            padding: 8px 10px;
+            -webkit-appearance: menulist;
+        }
+
+        .b-boxit-popup .b-boxit-container {
+            margin: 0;
+        }
+
+        .b-boxit-popup .b-location-selector {
+            text-align: center;
+            margin: 12px 0 0;
+            text-align: center;
+        }
+
+            .b-boxit-popup .b-location-selector a{
+                text-decoration: none;
+                color: #1579a6;
+                border-bottom: 1px dashed #1579a6;
+            }

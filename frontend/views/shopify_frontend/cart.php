@@ -1,58 +1,6 @@
-<style>
-    .b-boxit-container {
-        margin: 20px 0;
-    }
+<style>@import url('[[BASE_API_URL]]/shopify_frontend/css/layout.css');</style>
 
-        .b-boxit-container h3.title{
-            font-size: 20px;
-        }
-
-        .b-boxit-container .method {
-            display: block;
-            margin-left: 14px;
-            margin-bottom: 20px;
-        }
-
-        .b-boxit-container .method span {
-            margin: 15px;
-            font-weight: bold;
-            font-size: 12px;
-            color: #0993a8;
-        }
-
-        .b-boxit-container .method a {
-            cursor: pointer;
-            margin-left: 26px;
-            color: #999;
-            font-size: 12px;
-        }
-
-        .b-boxit-container .inputField{
-            display: inline;
-            margin-left: 14px;
-        }
-
-        .b-boxit-container input[type=radio]{
-            -webkit-appearance: radio;
-        }
-
-        .b-boxit-container input[type=checkbox]{
-            -webkit-appearance: checkbox;
-        }
-
-        .b-boxit-preloader {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 8px 20px;
-            border-radius: 4px;
-            -webkit-border-radius: 4px;
-            -moz-border-radius: 4px;
-            border: 1px solid #bce8f1;
-            color: #31708f;
-            background-color: #d9edf7;
-        }
-
-</style>
+<!-- You can override all styles here -->
 
 <div class="b-boxit-preloader" style="display: none">
     Please wait, while we loading additional delivery settings...
